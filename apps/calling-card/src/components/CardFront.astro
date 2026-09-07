@@ -1,20 +1,21 @@
 ---
 interface Props {
-  phone?: string;
-  website?: string;
+  name?: string
+  phone?: string
+  website?: string
 }
 
-const { 
-  phone = '+63 939 273 7849',
-  website = 'startpos.github.io'
-} = Astro.props;
+const { name = 'Ricardo Rey Crisanto V. Lopez II', phone = '+63 939 273 7849', website = 'startpos.github.io' } = Astro.props
 ---
 
 <article class="card card--front">
   <div class="front__edge"></div>
+  <div class="front__trial" aria-label="30-day free trial">30-day free trial</div>
   <h1 class="front__wordmark">StartPOS</h1>
   <p class="front__tagline">Point of Sale <span class="plus">+</span> Inventory</p>
   <p class="front__proposition">Sell. Track. Grow.</p>
+
+  <p class="front__name">{name}</p>
   
   <div class="front__contact">
     <p class="front__contact-item">📱 {phone}</p>

@@ -18,13 +18,12 @@ import '../styles/cards.css'
 
     .print-sheet {
       width: 8.5in;
-      height: 11in;
       padding: 0.5in;
       box-sizing: border-box;
       display: grid;
       grid-template-columns: repeat(2, 3.5in);
       grid-template-rows: repeat(5, 2in);
-      gap: 0.25in;
+      gap: 0;
       page-break-after: always;
     }
 
@@ -32,20 +31,7 @@ import '../styles/cards.css'
       page-break-after: auto;
     }
 
-    /* Page 2 - reverse order for duplex printing (flip on short edge) */
-    .print-sheet--back {
-      /* Flip the entire sheet horizontally */
-      transform: scaleX(-1);
-      /* Reverse the grid direction so cards align when flipped */
-      direction: rtl;
-    }
-
-    .print-sheet--back .card {
-      /* Flip cards back to readable orientation */
-      transform: scaleX(-1);
-      /* Reset direction for card content */
-      direction: ltr;
-    }
+    /* Page 2 - no flipping needed: re-feed paper manually backwards */
 
     @media screen {
       body {
@@ -112,7 +98,7 @@ import '../styles/cards.css'
   </div>
 
   <!-- PAGE 2: BACKS MIRRORED (10 cards flipped for duplex) -->
-  <div class="page-label">PAGE 2 — BACKS (Flip paper and print on back)</div>
+  <div class="page-label">PAGE 2 — BACKS (Re-feed paper backwards, print on back)</div>
   <div class="print-sheet print-sheet--back">
     <CardBack />
     <CardBack />

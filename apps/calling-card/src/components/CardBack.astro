@@ -1,18 +1,30 @@
 ---
 interface Props {
-  phone?: string;
-  website?: string;
-  email?: string;
+  phone?: string
+  website?: string
+  email?: string
+  address?: string
 }
 
-const { 
+const {
   phone = '+63 939 273 7849',
   website = 'startpos.github.io',
-  email = 'startpos04@gmail.com'
-} = Astro.props;
+  email = 'startpos04@gmail.com',
+  address = 'Bonfal West, Bayombong, Nueva Vizcaya',
+} = Astro.props
+
+const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&format=svg&color=0C222C&bgcolor=FAFAF9&qzone=1&data=${encodeURIComponent(`https://${website}`)}`
 ---
 
 <article class="card card--back">
+  <!-- Subtle oversized logo watermark -->
+  <div class="back__watermark" aria-hidden="true">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+      <path d="M8 6L5 10v14a2 2 0 002 2h18a2 2 0 002-2V10L24 6z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+      <line x1="5" y1="10" x2="27" y2="10" stroke="currentColor" stroke-width="2"/>
+      <path d="M20 14a4 4 0 01-8 0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+    </svg>
+  </div>
   <h2 class="back__headline">Complete POS + inventory for retail, restaurant & grocery.</h2>
 
   <div class="back__groups">
@@ -39,7 +51,7 @@ const {
     </div>
 
     <div class="qr" role="img" aria-label="QR code linking to StartPOS website">
-      <img src="/qr-code.svg" alt="QR code for startpos.github.io">
+      <img src={qrUrl} alt={`QR code for ${website}`} width="200" height="200">
     </div>
   </div>
 
@@ -57,6 +69,11 @@ const {
     <div class="back__footer-item">
       <span>Email</span>
       <span>{email}</span>
+    </div>
+    <div class="back__footer-divider"></div>
+    <div class="back__footer-item">
+      <span>Address</span>
+      <span>{address}</span>
     </div>
   </div>
 </article>

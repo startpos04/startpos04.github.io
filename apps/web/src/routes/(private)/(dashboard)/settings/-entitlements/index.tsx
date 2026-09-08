@@ -97,8 +97,8 @@ export function EntitlementsPage() {
   const { planName, status, billingModel, includedTxPerMonth, txUsedThisPeriod } = data
 
   return (
-    <div className='w-full h-full bg-background flex overflow-hidden relative min-h-0 flex-1 gap-4'>
-      <div className='flex-1 min-w-0 h-full flex flex-col overflow-hidden transition-all duration-300 ease-in-out bg-background/50'>
+    <div className='w-full bg-background relative flex gap-4'>
+      <div className='flex-1 min-w-0 flex flex-col bg-background/50'>
         {/* Header */}
         <div className='p-4 border-b bg-background shrink-0'>
           <div className='flex flex-col gap-4'>
@@ -162,7 +162,7 @@ export function EntitlementsPage() {
         </div>
 
         {/* Table */}
-        <div className='flex-1 min-h-0 overflow-hidden'>
+        <div>
           <MultiView<EntitlementDetail>
             data={capabilities}
             isFetching={isLoading}

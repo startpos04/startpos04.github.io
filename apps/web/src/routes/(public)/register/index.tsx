@@ -24,6 +24,9 @@
  *     /register/business-setup (handled in (private)/route.tsx).
  */
 
+import { TRIAL_DURATION_DAYS, TRIAL_TX_LIMIT } from '@constants/lib/app'
+import { COMPLIMENTARY_CREDITS } from '@constants/lib/credits'
+import { OTP_LENGTH } from '@constants/lib/otp'
 import { Form } from '@platform/components/custom/form'
 import { TextInput } from '@platform/components/custom/form/text-input'
 import { ThemeToggle } from '@platform/components/custom/theme/theme-toggle'
@@ -33,6 +36,7 @@ import { Input } from '@platform/components/ui/input'
 import { Separator } from '@platform/components/ui/separator'
 import { useIsOnline } from '@platform/hooks/use-is-online'
 import { cn } from '@platform/lib/utils'
+import { BRAND_WEBSITE_URL } from '@startpos/constants/lib/contact'
 import { useForm } from '@tanstack/react-form'
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { Loader2, Mail } from 'lucide-react'
@@ -69,10 +73,8 @@ const accountSchema = z.object({
 type AccountValues = z.infer<typeof accountSchema>
 
 // ---------------------------------------------------------------------------
-// OTP_LENGTH — must match the value configured in auth.ts emailOTP plugin
+// OTP_LENGTH imported from @constants/lib/otp — must match the emailOTP plugin config
 // ---------------------------------------------------------------------------
-
-const OTP_LENGTH = 6
 
 // ---------------------------------------------------------------------------
 // Route
@@ -459,7 +461,9 @@ function RouteComponent() {
             <CardTitle className='text-2xl font-bold'>Create your account</CardTitle>
             <ThemeToggle />
           </div>
-          <CardDescription>30-day free trial with 500 transactions plus 50 credits — no card required.</CardDescription>
+          <CardDescription>
+            {TRIAL_DURATION_DAYS}-day free trial with {TRIAL_TX_LIMIT} transactions plus {COMPLIMENTARY_CREDITS} credits — no card required.
+          </CardDescription>
         </CardHeader>
 
         {/* OAuth buttons */}
@@ -518,7 +522,7 @@ function RouteComponent() {
                     <label htmlFor='terms-accepted' className='text-sm text-muted-foreground leading-snug cursor-pointer'>
                       I agree to the{' '}
                       <a
-                        href='/terms'
+                        href={`${BRAND_WEBSITE_URL}/terms`}
                         target='_blank'
                         rel='noopener noreferrer'
                         className='font-medium text-primary underline-offset-4 hover:underline'
@@ -528,7 +532,7 @@ function RouteComponent() {
                       </a>{' '}
                       and{' '}
                       <a
-                        href='/privacy'
+                        href={`${BRAND_WEBSITE_URL}/privacy`}
                         target='_blank'
                         rel='noopener noreferrer'
                         className='font-medium text-primary underline-offset-4 hover:underline'

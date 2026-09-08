@@ -55,46 +55,48 @@ export function MultiView<T>({ views, creatable, searchable, label, description,
   )
 
   return (
-    <>
-      <div className='flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4'>
-        <div>
-          <h1 className='text-2xl font-semibold tracking-tight'>{label}</h1>
-          <p className='text-muted-foreground text-sm'>{description}</p>
-        </div>
-
-        <div className='space-y-2'>
-          <div className='flex items-center gap-2 justify-end'>
-            {SearchComponent === undefined ? (
-              <Input className='h-6' placeholder='Search...' defaultValue={searchable?.searchValue} onChange={handleSearchChange} />
-            ) : (
-              SearchComponent
-            )}
-            {creatable ? (
-              <a href={creatable.href} onClick={creatable.onAdd} className='contents'>
-                <Button className='shadow-lg shadow-primary/20 transition-all hover:scale-[1.02] active:scale-[0.98]' size='sm'>
-                  <Plus className='size-4' /> {creatable.label}
-                </Button>
-              </a>
-            ) : null}
+    <div className='flex flex-col gap-4 p-4'>
+      {(label || description || creatable || searchable || actions || views.list.length > 1) && (
+        <div className='flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shrink-0'>
+          <div>
+            <h1 className='text-2xl font-semibold tracking-tight'>{label}</h1>
+            <p className='text-muted-foreground text-sm'>{description}</p>
           </div>
 
-          <div className='flex items-center gap-2 justify-end'>
-            {actions}
-            {views.list.length > 1 ? (
-              <ButtonGroup>
-                {views.list.map(({ type }) => {
-                  const { Icon, label } = VIEWS[type]
-                  return (
-                    <Button key={type} variant={views.selectedView === type ? 'default' : 'outline'} onClick={() => views.onViewChange?.(type)} size='sm'>
-                      <Icon /> {label}
-                    </Button>
-                  )
-                })}
-              </ButtonGroup>
-            ) : null}
+          <div className='space-y-2'>
+            <div className='flex items-center gap-2 justify-end'>
+              {SearchComponent === undefined ? (
+                <Input className='h-6' placeholder='Search...' defaultValue={searchable?.searchValue} onChange={handleSearchChange} />
+              ) : (
+                SearchComponent
+              )}
+              {creatable ? (
+                <a href={creatable.href} onClick={creatable.onAdd} className='contents'>
+                  <Button className='shadow-lg shadow-primary/20 transition-all hover:scale-[1.02] active:scale-[0.98]' size='sm'>
+                    <Plus className='size-4' /> {creatable.label}
+                  </Button>
+                </a>
+              ) : null}
+            </div>
+
+            <div className='flex items-center gap-2 justify-end'>
+              {actions}
+              {views.list.length > 1 ? (
+                <ButtonGroup>
+                  {views.list.map(({ type }) => {
+                    const { Icon, label } = VIEWS[type]
+                    return (
+                      <Button key={type} variant={views.selectedView === type ? 'default' : 'outline'} onClick={() => views.onViewChange?.(type)} size='sm'>
+                        <Icon /> {label}
+                      </Button>
+                    )
+                  })}
+                </ButtonGroup>
+              ) : null}
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {views.list.map(viewConfig => {
         if (views.selectedView !== viewConfig.type) return null
@@ -104,6 +106,6 @@ export function MultiView<T>({ views, creatable, searchable, label, description,
         // biome-ignore lint/suspicious/noExplicitAny: Component type and props are guaranteed to match via the active view runtime filter.
         return <Component key={type} {...(rest as any)} {...props} />
       })}
-    </>
+    </div>
   )
 }

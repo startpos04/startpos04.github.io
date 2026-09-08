@@ -47,7 +47,9 @@
     "paths": {
       "prisma/*": ["../../packages/platform/prisma/*"],
       "@/*": ["./src/*"],
-      "@platform/*": ["../../packages/platform/*"]
+      "@platform/*": ["../../packages/platform/*"],
+      "@constants/*": ["../../packages/constants/*"],
+      "@constants": ["../../packages/constants/index.ts"]
     }
   }
 }

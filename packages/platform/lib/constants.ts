@@ -1,7 +1,8 @@
 import { PaymentMethod } from 'prisma/generated/prisma/enums'
 
-export const APP_NAME = 'StartPOS'
-export const APP_SHORT_NAME = 'POS'
+// APP_NAME and APP_SHORT_NAME live in @startpos/constants — re-exported here
+// so existing callers using '@platform/lib/constants' continue to work.
+export { APP_NAME, APP_SHORT_NAME } from '@startpos/constants/lib/app'
 
 export type PaymentMethodType = (typeof PaymentMethod)[keyof typeof PaymentMethod]
 export const PAYMENT_PLATFORMS = {

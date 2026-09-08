@@ -210,6 +210,9 @@ importers:
 
   apps/calling-card:
     dependencies:
+      '@startpos/constants':
+        specifier: workspace:*
+        version: link:../../packages/constants
       astro:
         specifier: ^7.2.1
         version: 7.2.10(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.1)(@types/node@24.13.3)(db0@0.4.1)(jiti@2.6.1)(terser@5.47.1)(tsx@4.21.0)(yaml@2.8.4)
@@ -234,6 +237,9 @@ importers:
       '@serwist/window':
         specifier: ^9.5.7
         version: 9.5.7(browserslist@4.28.2)(typescript@5.9.3)
+      '@startpos/constants':
+        specifier: workspace:*
+        version: link:../../packages/constants
       '@startpos/platform':
         specifier: workspace:*
         version: link:../../packages/platform
@@ -472,6 +478,9 @@ importers:
       '@astrojs/sitemap':
         specifier: ^3.2.1
         version: 3.7.4
+      '@startpos/constants':
+        specifier: workspace:*
+        version: link:../../packages/constants
       astro:
         specifier: ^7.2.1
         version: 7.2.10(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.3)(@types/node@24.13.3)(db0@0.4.1)(jiti@2.6.1)(terser@5.47.1)(tsx@4.21.0)(yaml@2.8.4)
@@ -486,6 +495,8 @@ importers:
         specifier: ^4.1.11
         version: 4.2.2
 
+  packages/constants: {}
+
   packages/platform:
     dependencies:
       '@prisma/adapter-pg':
@@ -497,6 +508,9 @@ importers:
       '@serwist/window':
         specifier: '*'
         version: 9.5.7(browserslist@4.28.2)(typescript@5.9.3)
+      '@startpos/constants':
+        specifier: workspace:*
+        version: link:../constants
       '@tanstack/browser-db-sqlite-persistence':
         specifier: '*'
         version: 0.1.9(@journeyapps/wa-sqlite@1.7.0)(typescript@5.9.3)

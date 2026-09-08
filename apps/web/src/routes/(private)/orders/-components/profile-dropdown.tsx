@@ -6,6 +6,7 @@ import { Link } from '@tanstack/react-router'
 import { ClipboardPenLine, LayoutDashboard, PanelTopClose } from 'lucide-react'
 import { Role, SessionStatus } from 'prisma/generated/prisma/enums'
 import { ProfileDropdown as BaseProfileDropdown } from '@/components/dashboard/profile-dropdown'
+import { useAuthenticatedUser } from '@/lib/better-auth/auth-store'
 import { CloseSessionDialog } from '../../pos/-components/close-session-dialog'
 
 export const ProfileDropdown = () => {

@@ -1,4 +1,4 @@
-/* eslint-disable */
+﻿/* eslint-disable */
 
 // @ts-nocheck
 
@@ -16,8 +16,6 @@ import { Route as publicIndexRouteImport } from './routes/(public)/index'
 import { Route as publicLoginRouteImport } from './routes/(public)/login'
 import { Route as publicForgotPasswordRouteImport } from './routes/(public)/forgot-password'
 import { Route as hybridUnauthorizedRouteImport } from './routes/(hybrid)/unauthorized'
-import { Route as hybridTermsRouteImport } from './routes/(hybrid)/terms'
-import { Route as hybridPrivacyRouteImport } from './routes/(hybrid)/privacy'
 import { Route as privatedashboardRouteRouteImport } from './routes/(private)/(dashboard)/route'
 import { Route as publicRegisterIndexRouteImport } from './routes/(public)/register/index'
 import { Route as privateTasksIndexRouteImport } from './routes/(private)/tasks/index'
@@ -119,16 +117,6 @@ const publicForgotPasswordRoute = publicForgotPasswordRouteImport.update({
 const hybridUnauthorizedRoute = hybridUnauthorizedRouteImport.update({
   id: '/unauthorized',
   path: '/unauthorized',
-  getParentRoute: () => hybridRouteRoute,
-} as any)
-const hybridTermsRoute = hybridTermsRouteImport.update({
-  id: '/terms',
-  path: '/terms',
-  getParentRoute: () => hybridRouteRoute,
-} as any)
-const hybridPrivacyRoute = hybridPrivacyRouteImport.update({
-  id: '/privacy',
-  path: '/privacy',
   getParentRoute: () => hybridRouteRoute,
 } as any)
 const privatedashboardRouteRoute = privatedashboardRouteRouteImport.update({
@@ -540,8 +528,6 @@ const privatedashboardBusinessSubscriptionQuotesQuoteIdIndexRoute =
   } as any)
 
 export interface FileRoutesByFullPath {
-  '/privacy': typeof hybridPrivacyRoute
-  '/terms': typeof hybridTermsRoute
   '/unauthorized': typeof hybridUnauthorizedRoute
   '/forgot-password': typeof publicForgotPasswordRoute
   '/login': typeof publicLoginRoute
@@ -617,8 +603,6 @@ export interface FileRoutesByFullPath {
   '/business/subscription/quotes/$quoteId/': typeof privatedashboardBusinessSubscriptionQuotesQuoteIdIndexRoute
 }
 export interface FileRoutesByTo {
-  '/privacy': typeof hybridPrivacyRoute
-  '/terms': typeof hybridTermsRoute
   '/unauthorized': typeof hybridUnauthorizedRoute
   '/forgot-password': typeof publicForgotPasswordRoute
   '/login': typeof publicLoginRoute
@@ -691,8 +675,6 @@ export interface FileRoutesById {
   '/(private)': typeof privateRouteRouteWithChildren
   '/(public)': typeof publicRouteRouteWithChildren
   '/(private)/(dashboard)': typeof privatedashboardRouteRouteWithChildren
-  '/(hybrid)/privacy': typeof hybridPrivacyRoute
-  '/(hybrid)/terms': typeof hybridTermsRoute
   '/(hybrid)/unauthorized': typeof hybridUnauthorizedRoute
   '/(public)/forgot-password': typeof publicForgotPasswordRoute
   '/(public)/login': typeof publicLoginRoute
@@ -1057,20 +1039,6 @@ declare module '@tanstack/react-router' {
       path: '/unauthorized'
       fullPath: '/unauthorized'
       preLoaderRoute: typeof hybridUnauthorizedRouteImport
-      parentRoute: typeof hybridRouteRoute
-    }
-    '/(hybrid)/terms': {
-      id: '/(hybrid)/terms'
-      path: '/terms'
-      fullPath: '/terms'
-      preLoaderRoute: typeof hybridTermsRouteImport
-      parentRoute: typeof hybridRouteRoute
-    }
-    '/(hybrid)/privacy': {
-      id: '/(hybrid)/privacy'
-      path: '/privacy'
-      fullPath: '/privacy'
-      preLoaderRoute: typeof hybridPrivacyRouteImport
       parentRoute: typeof hybridRouteRoute
     }
     '/(private)/(dashboard)': {
@@ -1567,14 +1535,10 @@ declare module '@tanstack/react-router' {
 }
 
 interface hybridRouteRouteChildren {
-  hybridPrivacyRoute: typeof hybridPrivacyRoute
-  hybridTermsRoute: typeof hybridTermsRoute
   hybridUnauthorizedRoute: typeof hybridUnauthorizedRoute
 }
 
 const hybridRouteRouteChildren: hybridRouteRouteChildren = {
-  hybridPrivacyRoute: hybridPrivacyRoute,
-  hybridTermsRoute: hybridTermsRoute,
   hybridUnauthorizedRoute: hybridUnauthorizedRoute,
 }
 

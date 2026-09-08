@@ -20,6 +20,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@platform/components/u
 import { Separator } from '@platform/components/ui/separator'
 import dayjs from '@platform/lib/dayjs'
 import MountManager from '@platform/lib/mount-manager'
+import { BRAND_WEBSITE_URL } from '@startpos/constants/lib/contact'
 import { AlertTriangle, FileText, Loader2, ShieldAlert, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
@@ -123,11 +124,11 @@ export function AccountPage() {
           <Separator />
           <p className='text-xs text-muted-foreground'>
             View our{' '}
-            <a href='/terms' target='_blank' rel='noopener noreferrer' className='text-primary underline-offset-4 hover:underline'>
+            <a href={`${BRAND_WEBSITE_URL}/terms`} target='_blank' rel='noopener noreferrer' className='text-primary underline-offset-4 hover:underline'>
               Terms of Service
             </a>{' '}
             and{' '}
-            <a href='/privacy' target='_blank' rel='noopener noreferrer' className='text-primary underline-offset-4 hover:underline'>
+            <a href={`${BRAND_WEBSITE_URL}/privacy`} target='_blank' rel='noopener noreferrer' className='text-primary underline-offset-4 hover:underline'>
               Privacy Policy
             </a>
             .

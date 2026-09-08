@@ -1,11 +1,10 @@
-import { Serwist } from '@serwist/window'
 import { useEffect } from 'react'
 import { toast } from 'sonner'
 
 export const useSw = () => {
   useEffect(() => {
     // Completely disable service worker in development to prevent module resolution issues
-    const isDev = process.env['NODE_ENV']
+    const isDev = process.env['NODE_ENV'] === 'development'
     if (isDev) {
       console.log('[SW] Service worker disabled in development mode')
 
@@ -30,37 +29,10 @@ export const useSw = () => {
     // already had an active SW" (a genuine update is replacing it).
     const hadControllerAtStart = !!navigator.serviceWorker.controller
 
-    const serwist = new Serwist('/sw.js', { scope: '/', type: 'module' })
-
-    const register = async () => {
-      try {
-        await serwist.register()
-
-        const registration = await navigator.serviceWorker.ready
-        try {
-          registration.active?.postMessage('start-lazy-precache')
-        } catch (error) {
-          console.error('Failed to trigger lazy precache:', error)
-        }
-      } catch (error) {
-        console.error('Service worker registration failed:', error)
-      }
-    }
-
-    const scheduleRegister = () => {
-      if ('requestIdleCallback' in window) {
-        requestIdleCallback(() => register(), { timeout: 3000 })
-      } else {
-        setTimeout(register, 1000)
-      }
-    }
-
-    if (document.readyState === 'complete') {
-      scheduleRegister()
-    } else {
-      window.addEventListener('load', scheduleRegister, { once: true })
-    }
-
+    // Listeners registered synchronously so the cleanup return can reference them.
+    // The actual SW registration happens inside the async IIFE below so we can
+    // dynamically import @serwist/window without making the useEffect callback
+    // itself async (which would prevent returning a cleanup function).
     const handleOnline = () => {
       navigator.serviceWorker.controller?.postMessage('retry-lazy-precache')
     }
@@ -69,16 +41,8 @@ export const useSw = () => {
     let refreshing = false
     const handleControllerChange = () => {
       if (refreshing) return
-
-      // First-ever activation: nothing changed underneath the page — the
-      // resources it already loaded are correct. No reload needed.
       if (!hadControllerAtStart) return
-
       refreshing = true
-
-      // A real update: an already-active SW is being replaced. Never force
-      // a reload here — that could interrupt an in-progress POS transaction.
-      // Let the user choose when.
       toast('An update is available', {
         description: 'Refresh to get the latest version.',
         duration: Infinity,
@@ -88,11 +52,44 @@ export const useSw = () => {
         },
       })
     }
-
     navigator.serviceWorker.addEventListener('controllerchange', handleControllerChange)
 
+    // Async IIFE — loads @serwist/window lazily so its module-level code
+    // never runs during the dependency scan or in development.
+    ;(async () => {
+      const { Serwist } = await import('@serwist/window')
+      const serwist = new Serwist('/sw.js', { scope: '/', type: 'module' })
+
+      const register = async () => {
+        try {
+          await serwist.register()
+          const registration = await navigator.serviceWorker.ready
+          try {
+            registration.active?.postMessage('start-lazy-precache')
+          } catch (error) {
+            console.error('Failed to trigger lazy precache:', error)
+          }
+        } catch (error) {
+          console.error('Service worker registration failed:', error)
+        }
+      }
+
+      const scheduleRegister = () => {
+        if ('requestIdleCallback' in window) {
+          requestIdleCallback(() => register(), { timeout: 3000 })
+        } else {
+          setTimeout(register, 1000)
+        }
+      }
+
+      if (document.readyState === 'complete') {
+        scheduleRegister()
+      } else {
+        window.addEventListener('load', scheduleRegister, { once: true })
+      }
+    })()
+
     return () => {
-      window.removeEventListener('load', scheduleRegister)
       window.removeEventListener('online', handleOnline)
       navigator.serviceWorker.removeEventListener('controllerchange', handleControllerChange)
     }

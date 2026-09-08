@@ -14,14 +14,11 @@
  * so that if the user is later created by other flows, there's no collision.
  */
 
+import { MAX_OTP_ATTEMPTS, OTP_EXPIRES_IN_SECONDS, OTP_LENGTH } from '@constants/lib/otp'
 import { prisma } from '@platform/lib/prisma-client'
 import { createServerFn } from '@tanstack/react-start'
 import { Resend } from 'resend'
 import { z } from 'zod'
-
-const OTP_LENGTH = 6
-const OTP_EXPIRES_IN_SECONDS = 600 // 10 minutes
-const MAX_ATTEMPTS = 3
 
 const sendSchema = z.object({ email: z.string().email() })
 const verifySchema = z.object({ email: z.string().email(), otp: z.string().length(OTP_LENGTH) })
@@ -130,7 +127,7 @@ export const verifyRegistrationOTP = createServerFn({ method: 'POST' })
     const [storedOtp, attemptsStr] = row.value.split(':')
     const attempts = parseInt(attemptsStr ?? '0', 10)
 
-    if (attempts >= MAX_ATTEMPTS) {
+    if (attempts >= MAX_OTP_ATTEMPTS) {
       await prisma.verification.deleteMany({ where: { identifier } })
       return { success: false as const, error: 'Too many attempts. Please request a new code.' }
     }
@@ -141,7 +138,7 @@ export const verifyRegistrationOTP = createServerFn({ method: 'POST' })
         where: { id: row.id },
         data: { value: `${storedOtp}:${attempts + 1}` },
       })
-      const remaining = MAX_ATTEMPTS - attempts - 1
+      const remaining = MAX_OTP_ATTEMPTS - attempts - 1
       return {
         success: false as const,
         error: remaining > 0 ? `Invalid code. ${remaining} attempt${remaining === 1 ? '' : 's'} remaining.` : 'Too many attempts. Please request a new code.',

@@ -1,9 +1,8 @@
 {
   "compilerOptions": {
     "target": "ES2022",
-    "jsx": "react-jsx",
     "module": "ESNext",
-    "lib": ["ES2022", "DOM", "DOM.Iterable", "WebWorker"],
+    "lib": ["ES2022"],
 
     "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,
@@ -19,18 +18,13 @@
     "allowUnusedLabels": false,
     "allowUnreachableCode": false,
     "noUncheckedIndexedAccess": true,
-    "noPropertyAccessFromIndexSignature": true,
     "erasableSyntaxOnly": true,
     "exactOptionalPropertyTypes": true,
-    "noErrorTruncation": false,
 
     "paths": {
-      "@platform/*": ["./*"],
-      "prisma/*": ["./prisma/*"],
-      "@constants/*": ["../constants/*"],
-      "@constants": ["../constants/index.ts"]
+      "@constants/*": ["./*"]
     }
   },
-  "include": ["**/*.ts", "**/*.tsx"],
-  "exclude": ["node_modules", "dist"]
+  "include": ["**/*.ts"],
+  "exclude": ["node_modules"]
 }

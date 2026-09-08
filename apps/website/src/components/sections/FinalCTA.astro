@@ -1,15 +1,13 @@
 ---
+import { TRIAL_OFFER_COPY } from '@startpos/constants/lib/app'
 import { APP_URL } from '../../constants'
 ---
-
 <section class="py-24 sm:py-32 bg-slate-900 relative overflow-hidden">
   <!-- Grid bg -->
   <div class="absolute inset-0 bg-[linear-gradient(rgba(16,185,129,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(16,185,129,0.05)_1px,transparent_1px)] bg-[size:64px_64px]"></div>
   <div class="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-slate-900/80"></div>
-
   <!-- Glow -->
   <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[300px] bg-emerald-500/10 rounded-full blur-3xl"></div>
-
   <div class="relative max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center reveal">
     <h2 class="text-4xl sm:text-5xl font-black text-white leading-tight mb-6">
       Ready to run a smarter business?
@@ -18,7 +16,6 @@ import { APP_URL } from '../../constants'
       Join businesses across the Philippines using Start POS to simplify operations,
       track inventory, and never miss a sale.
     </p>
-
     <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
       <a
         href={APP_URL}
@@ -33,9 +30,8 @@ import { APP_URL } from '../../constants'
         Talk to sales
       </a>
     </div>
-
     <p class="mt-6 text-sm text-slate-500">
-      Free 30-day trial · No credit card required · Cancel anytime
+      {TRIAL_OFFER_COPY} · Cancel anytime
     </p>
   </div>
 </section>

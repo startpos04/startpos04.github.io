@@ -2,14 +2,14 @@
 // Site-wide constants — edit these to configure the website
 // ---------------------------------------------------------------------------
 
-/** The URL to the hosted application (trial signup destination) */
-export const APP_URL = 'https://https://startpos.github.io/'
+// APP_URL and ANNUAL_DISCOUNT_PCT live in packages/constants — re-exported
+// here so existing imports from './constants' continue to work unchanged.
+import { ANNUAL_DISCOUNT_PCT, APP_URL } from '@startpos/constants/lib/app'
+
+export { ANNUAL_DISCOUNT_PCT, APP_URL }
 
 /** Formspree endpoint for the contact form */
 export const FORMSPREE_ENDPOINT = 'https://formspree.io/f/YOUR_FORM_ID'
-
-/** Annual billing discount as a percentage (e.g. 20 = 20% off) */
-export const ANNUAL_DISCOUNT_PCT = 20
 
 /** Base path */
 export const BASE_PATH = ''
@@ -20,11 +20,11 @@ export const BASE_PATH = ''
 
 export interface Plan {
   name: string
-  price: number | null   // monthly price in PHP; null = contact
+  price: number | null // monthly price in PHP; null = contact
   annualPrice: number | null // annual total in PHP; null = contact
-  txPerMonth: number | null  // null = unlimited
-  branches: number | null    // null = unlimited
-  employees: number | null   // null = unlimited
+  txPerMonth: number | null // null = unlimited
+  branches: number | null // null = unlimited
+  employees: number | null // null = unlimited
   tagline: string
   highlighted: boolean
   badge?: string
@@ -214,7 +214,7 @@ export const FAQS: FAQ[] = [
   {
     question: 'Why does the trial have a 500-transaction limit?',
     answer:
-      '500 transactions is enough to fully evaluate Start POS in a real business environment — most businesses take weeks to reach that volume. The limit creates a natural conversion point: when you\'ve processed enough real sales to know the system works for you, it\'s the right time to choose a plan. Your data is always preserved when you upgrade.',
+      "500 transactions is enough to fully evaluate Start POS in a real business environment — most businesses take weeks to reach that volume. The limit creates a natural conversion point: when you've processed enough real sales to know the system works for you, it's the right time to choose a plan. Your data is always preserved when you upgrade.",
   },
   {
     question: 'Can I switch plans at any time?',
@@ -256,10 +256,14 @@ export const NAV_LINKS = [
   { label: 'Product', href: 'product-intro' },
   { label: 'Features', href: 'features' },
   { label: 'Pricing', href: 'pricing' },
-  { label: 'Use Cases', href: '#', children: [
-    { label: 'Retail', href: 'use-cases/retail' },
-    { label: 'Restaurant', href: 'use-cases/restaurant' },
-    { label: 'Grocery', href: 'use-cases/grocery' },
-  ]},
+  {
+    label: 'Use Cases',
+    href: '#',
+    children: [
+      { label: 'Retail', href: 'use-cases/retail' },
+      { label: 'Restaurant', href: 'use-cases/restaurant' },
+      { label: 'Grocery', href: 'use-cases/grocery' },
+    ],
+  },
   { label: 'About', href: 'about' },
 ]

@@ -13,6 +13,8 @@
  *   - GuidanceBanner    — hint corner banner (tutorials handled globally)
  */
 
+import { TRIAL_DURATION_DAYS, TRIAL_TX_LIMIT } from '@constants/lib/app'
+import { COMPLIMENTARY_CREDITS } from '@constants/lib/credits'
 import { Card, CardContent, CardHeader, CardTitle } from '@platform/components/ui/card'
 import { creditLedgerCollection, hintCollection, orderCollection, productCollection, userCollection } from '@platform/db/collections'
 import { cn } from '@platform/lib/utils'
@@ -330,7 +332,9 @@ function WelcomeBanner({ name, businessName }: WelcomeBannerProps) {
       {/* Bottom row: sparkle tagline */}
       <div className='relative mt-4 flex items-center gap-1.5 text-xs text-muted-foreground'>
         <SparklesIcon className='h-3 w-3 text-primary' />
-        <span>30-day free trial with 500 transactions plus 50 credits — no card required.</span>
+        <span>
+          {TRIAL_DURATION_DAYS}-day free trial with {TRIAL_TX_LIMIT} transactions plus {COMPLIMENTARY_CREDITS} credits — no card required.
+        </span>
       </div>
     </div>
   )

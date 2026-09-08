@@ -20,9 +20,9 @@
   --primary: oklch(0.64 0.16 168.25);
   --primary-foreground: oklch(0.985 0 0);
 
-  /* Secondary: Soft Indigo-Slate */
-  --secondary: oklch(0.96 0.013 255);
-  --secondary-foreground: oklch(0.35 0.06 255);
+  /* Secondary: Amber/Gold — from calling card accent-sell */
+  --secondary: oklch(0.78 0.14 68);
+  --secondary-foreground: oklch(0.4 0.1 55);
 
   --muted: oklch(0.97 0 0);
   --muted-foreground: oklch(0.556 0 0);
@@ -63,8 +63,8 @@
   --primary: oklch(0.72 0.16 168.25);
   --primary-foreground: oklch(0.15 0.05 168.25);
 
-  --secondary: oklch(0.25 0.03 255);
-  --secondary-foreground: oklch(0.95 0.02 255);
+  --secondary: oklch(0.65 0.15 68);
+  --secondary-foreground: oklch(0.95 0.05 68);
 
   --muted: oklch(0.25 0 0);
   --muted-foreground: oklch(0.708 0 0);

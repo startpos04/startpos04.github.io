@@ -22,6 +22,7 @@
  *   await paymentNotificationService.processScheduledNotifications()
  */
 
+import { TRIAL_DURATION_DAYS } from '@constants/lib/app'
 import dayjs from '@platform/lib/dayjs'
 import { prisma } from '@platform/lib/prisma-client'
 import type { BusinessSubscription } from 'prisma/generated/prisma/client'
@@ -217,7 +218,11 @@ export class PaymentNotificationService {
     }
 
     const now = new Date()
-    const evaluation = SubscriptionEngine.evaluateAdvancePaymentExpiring(snapshot, { trialDurationDays: 30, gracePeriodDays: 7, longTermInactiveDays: 90 }, now)
+    const evaluation = SubscriptionEngine.evaluateAdvancePaymentExpiring(
+      snapshot,
+      { trialDurationDays: TRIAL_DURATION_DAYS, gracePeriodDays: 7, longTermInactiveDays: 90 },
+      now,
+    )
 
     if (!evaluation.shouldNotify || !evaluation.expiresAt) {
       return

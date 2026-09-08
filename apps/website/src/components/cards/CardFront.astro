@@ -1,22 +1,22 @@
 ---
+import { BRAND_TAGLINE } from '@startpos/constants/lib/app'
 // CardFront.astro - Reusable front card component
+import { BRAND_WEBSITE, CONTACT_PHONE } from '@startpos/constants/lib/contact'
+
 interface Props {
-  phone?: string;
-  website?: string;
+  phone?: string
+  website?: string
 }
 
-const { 
-  phone = '+63 939 273 7849',
-  website = 'startpos.github.io'
-} = Astro.props;
+const { phone = CONTACT_PHONE, website = BRAND_WEBSITE } = Astro.props
 ---
 
 <article class="card card--front">
   <div class="front__edge"></div>
   <h1 class="front__wordmark">StartPOS</h1>
   <p class="front__tagline">Point of Sale <span class="plus">+</span> Inventory</p>
-  <p class="front__proposition">Sell. Track. Grow.</p>
-  
+  <p class="front__proposition">{BRAND_TAGLINE}</p>
+
   <div class="front__contact">
     <p class="front__contact-item">📱 {phone}</p>
     <p class="front__contact-item">🌐 {website}</p>
@@ -36,34 +36,15 @@ const {
     </div>
 
     <div class="panel__content">
-      <div class="panel__card">
-        <div class="panel__card-image">👕</div>
-        <div class="panel__card-info">
-          <div class="panel__card-name"></div>
-          <div class="panel__card-price"></div>
+      {['👕', '☕', '🍕', '🥤'].map((item) => (
+        <div class="panel__card">
+          <div class="panel__card-image">{item}</div>
+          <div class="panel__card-info">
+            <div class="panel__card-name"></div>
+            <div class="panel__card-price"></div>
+          </div>
         </div>
-      </div>
-      <div class="panel__card">
-        <div class="panel__card-image">☕</div>
-        <div class="panel__card-info">
-          <div class="panel__card-name"></div>
-          <div class="panel__card-price"></div>
-        </div>
-      </div>
-      <div class="panel__card">
-        <div class="panel__card-image">🍕</div>
-        <div class="panel__card-info">
-          <div class="panel__card-name"></div>
-          <div class="panel__card-price"></div>
-        </div>
-      </div>
-      <div class="panel__card">
-        <div class="panel__card-image">🥤</div>
-        <div class="panel__card-info">
-          <div class="panel__card-name"></div>
-          <div class="panel__card-price"></div>
-        </div>
-      </div>
+      ))}
     </div>
 
     <div class="panel__footer">

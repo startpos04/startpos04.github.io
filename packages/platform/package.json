@@ -14,6 +14,9 @@
   "exports": {
     "./*": "./*"
   },
+  "dependencies": {
+    "@startpos/constants": "workspace:*"
+  },
   "peerDependencies": {
     "@prisma/adapter-pg": "*",
     "@prisma/client": "*",

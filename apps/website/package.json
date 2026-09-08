@@ -14,6 +14,7 @@
   },
   "dependencies": {
     "@astrojs/sitemap": "^3.2.1",
+    "@startpos/constants": "workspace:*",
     "astro": "^7.2.1",
     "motion": "^11.16.4"
   },

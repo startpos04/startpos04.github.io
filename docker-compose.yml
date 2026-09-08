@@ -121,6 +121,56 @@ services:
         - action: rebuild
           path: pnpm-lock.yaml
 
+  calling-card:
+    build:
+      context: .
+      dockerfile: apps/calling-card/Dockerfile
+      target: dev
+    ports:
+      - '${CALLING_CARD_PUBLIC_PORT:-3205}:3005'
+    networks:
+      - app-network
+    develop:
+      watch:
+        - action: sync
+          path: ./apps/calling-card
+          target: /app/apps/calling-card
+          ignore:
+            - node_modules/
+            - dist/
+        - action: sync
+          path: ./packages/constants
+          target: /app/packages/constants
+        - action: rebuild
+          path: apps/calling-card/package.json
+        - action: rebuild
+          path: pnpm-lock.yaml
+
+  website:
+    build:
+      context: .
+      dockerfile: apps/website/Dockerfile
+      target: dev
+    ports:
+      - '${WEBSITE_PUBLIC_PORT:-4321}:4321'
+    networks:
+      - app-network
+    develop:
+      watch:
+        - action: sync
+          path: ./apps/website
+          target: /app/apps/website
+          ignore:
+            - node_modules/
+            - dist/
+        - action: sync
+          path: ./packages/constants
+          target: /app/packages/constants
+        - action: rebuild
+          path: apps/website/package.json
+        - action: rebuild
+          path: pnpm-lock.yaml
+
   stripe-setup:
     build:
       context: ./apps/stripe

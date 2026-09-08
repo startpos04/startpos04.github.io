@@ -35,7 +35,7 @@ export function TableView<T>(props: TableViewProps<T>) {
 
   return (
     <div className={cn('flex grow flex-col gap-2', className)}>
-      <div className='rounded-xl border border-border bg-card shadow-sm grow h-1 overflow-auto relative'>
+      <div className='rounded-xl border border-border bg-card shadow-sm overflow-hidden relative'>
         <Table>
           <TableHeader className='bg-muted/50'>
             {table.getHeaderGroups().map(headerGroup => (

@@ -18,15 +18,16 @@
  *   See complete-registration.ts for the constant definition.
  */
 
+import { CURRENT_PRIVACY_VERSION, CURRENT_TERMS_VERSION } from '@constants/lib/legal'
 import { Button } from '@platform/components/ui/button'
 import { Checkbox } from '@platform/components/ui/checkbox'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@platform/components/ui/dialog'
+import { BRAND_WEBSITE_URL } from '@startpos/constants/lib/contact'
 import { FileText, Loader2, ShieldCheck } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
 import { refreshAuthUser, useAuthenticatedUser } from '@/lib/better-auth/auth-store'
 import { acceptTerms } from '@/lib/server-fn/accept-terms'
-import { CURRENT_PRIVACY_VERSION, CURRENT_TERMS_VERSION } from '@/lib/server-fn/complete-registration'
 
 // ---------------------------------------------------------------------------
 // Version staleness check
@@ -115,7 +116,7 @@ export function TermsUpdateModal() {
             <label htmlFor='terms-reaccept' className='text-sm leading-snug cursor-pointer'>
               I have read and agree to the updated{' '}
               <a
-                href='/terms'
+                href={`${BRAND_WEBSITE_URL}/terms`}
                 target='_blank'
                 rel='noopener noreferrer'
                 className='text-primary underline-offset-4 hover:underline font-medium'
@@ -125,7 +126,7 @@ export function TermsUpdateModal() {
               </a>{' '}
               and{' '}
               <a
-                href='/privacy'
+                href={`${BRAND_WEBSITE_URL}/privacy`}
                 target='_blank'
                 rel='noopener noreferrer'
                 className='text-primary underline-offset-4 hover:underline font-medium'

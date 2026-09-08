@@ -31,7 +31,6 @@ import {
   ChevronRightIcon,
   ClipboardPenLine,
   CreditCardIcon,
-  GalleryVerticalEndIcon,
   HelpCircleIcon,
   LayoutDashboardIcon,
   LifeBuoyIcon,
@@ -39,6 +38,18 @@ import {
   ShieldIcon,
   TerminalSquareIcon,
 } from 'lucide-react'
+
+function BrandIcon() {
+  return (
+    <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32' width='16' height='16'>
+      <rect width='32' height='32' rx='8' fill='#10b981' />
+      <path d='M8 6L5 10v14a2 2 0 002 2h18a2 2 0 002-2V10L24 6z' fill='none' stroke='white' strokeWidth='2' strokeLinejoin='round' />
+      <line x1='5' y1='10' x2='27' y2='10' stroke='white' strokeWidth='2' />
+      <path d='M20 14a4 4 0 01-8 0' fill='none' stroke='white' strokeWidth='2' strokeLinecap='round' />
+    </svg>
+  )
+}
+
 import { BusinessType, Role } from 'prisma/generated/prisma/enums'
 import * as React from 'react'
 import { authStore, getAuthenticatedUser, useAuthenticatedUser } from '@/lib/better-auth/auth-store'
@@ -118,7 +129,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   )
 
   const { team, items } = React.useMemo(() => {
-    if (!user?.business) return { team: { name: APP_NAME, logo: <GalleryVerticalEndIcon />, plan: 'Guest' }, items: [] }
+    if (!user?.business) return { team: { name: APP_NAME, logo: <BrandIcon />, plan: 'Guest' }, items: [] }
 
     // Check if this is a single-branch business (most important check - comes first!)
     const isSingleBranch = !caps['MANAGE_BRANCHES'] || user.business?.branches?.length === 1
@@ -149,7 +160,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       const data = {
         team: {
           name: APP_NAME,
-          logo: <GalleryVerticalEndIcon />,
+          logo: <BrandIcon />,
           plan: user.role || 'Guest',
         },
         items: [
@@ -289,7 +300,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       return {
         team: {
           name: APP_NAME,
-          logo: <GalleryVerticalEndIcon />,
+          logo: <BrandIcon />,
           plan: 'Business Admin',
         },
         items: [
@@ -372,7 +383,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     const data = {
       team: {
         name: APP_NAME,
-        logo: <GalleryVerticalEndIcon />,
+        logo: <BrandIcon />,
         plan: user.role || 'Guest',
       },
       items: [

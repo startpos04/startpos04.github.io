@@ -4,6 +4,7 @@
  * Displays current subscription status, plan details, usage, and add-ons
  */
 
+import { TRIAL_DURATION_DAYS } from '@constants/lib/app'
 import { Badge } from '@platform/components/ui/badge'
 import { Button } from '@platform/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@platform/components/ui/card'
@@ -61,7 +62,6 @@ export function OverviewTab() {
   const trialDaysLeft = SubscriptionPolicy.trialDaysRemaining(trialEndsAt, now)
 
   // Trial progress (percentage elapsed out of 30-day default)
-  const TRIAL_DURATION_DAYS = 30
   const trialElapsed = trialDaysLeft !== null ? TRIAL_DURATION_DAYS - trialDaysLeft : 0
   const trialProgress = Math.min(100, Math.max(0, (trialElapsed / TRIAL_DURATION_DAYS) * 100))
 

@@ -1,4 +1,6 @@
 ---
+import { BRAND_ADDRESS, BRAND_WEBSITE, CONTACT_EMAIL, CONTACT_PHONE } from '@constants/lib/contact'
+
 interface Props {
   phone?: string
   website?: string
@@ -6,12 +8,7 @@ interface Props {
   address?: string
 }
 
-const {
-  phone = '+63 939 273 7849',
-  website = 'startpos.github.io',
-  email = 'startpos04@gmail.com',
-  address = 'Bonfal West, Bayombong, Nueva Vizcaya',
-} = Astro.props
+const { phone = CONTACT_PHONE, website = BRAND_WEBSITE, email = CONTACT_EMAIL, address = BRAND_ADDRESS } = Astro.props
 
 const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&format=svg&color=0C222C&bgcolor=FAFAF9&qzone=1&data=${encodeURIComponent(`https://${website}`)}`
 ---

@@ -51,6 +51,7 @@ import { runSubscriptionLifecycleJob } from '@/lib/jobs/subscription-lifecycle'
 import { runSubscriptionRenewalRemindersJob } from '@/lib/jobs/subscription-renewal-reminders'
 import { runUsageCounterResetJob } from '@/lib/jobs/usage-counter-reset'
 import '@/lib/billing/init-providers' // Ensure providers are registered
+import { TRIAL_DURATION_DAYS } from '@constants/lib/app'
 import { prisma as rootPrisma } from '@platform/lib/prisma-client'
 
 // ---------------------------------------------------------------------------
@@ -104,7 +105,7 @@ export const Route = createFileRoute('/api/cron/daily/' as never)({
         }
 
         const thresholds = {
-          trialDurationDays: 30,
+          trialDurationDays: TRIAL_DURATION_DAYS,
           gracePeriodDays: 7,
           longTermInactiveDays: 90,
         }

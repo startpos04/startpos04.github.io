@@ -59,15 +59,8 @@ import type { SurveyAnswers } from '../onboarding/types'
  * any legacy clients still sending the field during the rollout window.
  * The businessType column on Business is deprecated (do not use for logic).
  */
-// ---------------------------------------------------------------------------
-// Legal consent versioning — Phase 0
-// Bump these strings whenever the ToS or Privacy Policy is materially changed.
-// "Material change" means: new data categories, changed retention periods,
-// altered merchant obligations, or changed billing terms.
-// Keep old versions in git history; they establish what each user agreed to.
-// ---------------------------------------------------------------------------
-export const CURRENT_TERMS_VERSION = '2026-08-01'
-export const CURRENT_PRIVACY_VERSION = '2026-08-01'
+// Legal consent versions live in packages/constants/lib/legal.ts
+export { CURRENT_PRIVACY_VERSION, CURRENT_TERMS_VERSION } from '@constants/lib/legal'
 
 const CompleteRegistrationInputSchema = z.object({
   displayName: z.string().min(1, 'Name is required'),
@@ -100,7 +93,8 @@ const GLOBAL_BRANCH_CONFIGS: ConfigDefault[] = [
   { key: 'LOW_STOCK_THRESHOLD', value: '20' },
 ]
 
-const COMPLIMENTARY_CREDITS = 50
+import { TRIAL_DURATION_DAYS } from '@constants/lib/app'
+import { COMPLIMENTARY_CREDITS } from '@constants/lib/credits'
 
 // ---------------------------------------------------------------------------
 // Slug generator — appends -2, -3, etc. on collision
@@ -154,7 +148,7 @@ export const completeRegistration = createServerFn({ method: 'POST' })
     }
 
     const thresholds: LifecycleThresholds = {
-      trialDurationDays: 30,
+      trialDurationDays: TRIAL_DURATION_DAYS,
       gracePeriodDays: 7,
       longTermInactiveDays: 90,
     }
@@ -488,7 +482,7 @@ export const registerWithSurvey = createServerFn({ method: 'POST' })
     }
 
     const thresholds: LifecycleThresholds = {
-      trialDurationDays: 30,
+      trialDurationDays: TRIAL_DURATION_DAYS,
       gracePeriodDays: 7,
       longTermInactiveDays: 90,
     }

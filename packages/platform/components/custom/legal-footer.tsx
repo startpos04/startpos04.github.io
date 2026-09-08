@@ -10,7 +10,7 @@
  */
 
 import { APP_NAME } from '@platform/lib/constants'
-import { Link } from '@tanstack/react-router'
+import { BRAND_WEBSITE_URL } from '@startpos/constants/lib/contact'
 
 export function LegalFooter() {
   return (
@@ -20,12 +20,12 @@ export function LegalFooter() {
           © {new Date().getFullYear()} {APP_NAME}. All rights reserved.
         </p>
         <div className='flex items-center gap-4'>
-          <Link to='/terms' className='hover:underline underline-offset-4'>
+          <a href={`${BRAND_WEBSITE_URL}/terms`} target='_blank' rel='noopener noreferrer' className='hover:underline underline-offset-4'>
             Terms of Service
-          </Link>
-          <Link to='/privacy' className='hover:underline underline-offset-4'>
+          </a>
+          <a href={`${BRAND_WEBSITE_URL}/privacy`} target='_blank' rel='noopener noreferrer' className='hover:underline underline-offset-4'>
             Privacy Policy
-          </Link>
+          </a>
         </div>
       </div>
     </footer>

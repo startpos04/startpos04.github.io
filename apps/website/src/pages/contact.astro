@@ -1,6 +1,7 @@
 ---
-import BaseLayout from '../layouts/BaseLayout.astro'
+import { CONTACT_EMAIL } from '@startpos/constants/lib/contact'
 import { APP_URL, FORMSPREE_ENDPOINT } from '../constants'
+import BaseLayout from '../layouts/BaseLayout.astro'
 ---
 
 <BaseLayout
@@ -145,7 +146,7 @@ import { APP_URL, FORMSPREE_ENDPOINT } from '../constants'
                 <div class="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center text-lg shrink-0">📧</div>
                 <div>
                   <p class="text-sm font-bold text-slate-900 mb-0.5">Email</p>
-                  <a href="mailto:startpos04@gmail.com" class="text-sm text-emerald-600 hover:underline">startpos04@gmail.com</a>
+                  <a href={`mailto:${CONTACT_EMAIL}`} class="text-sm text-emerald-600 hover:underline">{CONTACT_EMAIL}</a>
                   <p class="text-xs text-slate-400 mt-1">We reply within 1 business day</p>
                 </div>
               </div>

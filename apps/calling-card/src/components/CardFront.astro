@@ -1,11 +1,14 @@
 ---
+import { BRAND_TAGLINE } from '@constants/lib/app'
+import { BRAND_WEBSITE, CONTACT_PHONE } from '@constants/lib/contact'
+
 interface Props {
   name?: string
   phone?: string
   website?: string
 }
 
-const { name = 'Ricardo Rey Crisanto V. Lopez II', phone = '+63 939 273 7849', website = 'startpos.github.io' } = Astro.props
+const { name = 'Ricardo Rey Crisanto V. Lopez II', phone = CONTACT_PHONE, website = BRAND_WEBSITE } = Astro.props
 ---
 
 <article class="card card--front">
@@ -13,10 +16,10 @@ const { name = 'Ricardo Rey Crisanto V. Lopez II', phone = '+63 939 273 7849', w
   <div class="front__trial" aria-label="30-day free trial">30-day free trial</div>
   <h1 class="front__wordmark">StartPOS</h1>
   <p class="front__tagline">Point of Sale <span class="plus">+</span> Inventory</p>
-  <p class="front__proposition">Sell. Track. Grow.</p>
+  <p class="front__proposition">{BRAND_TAGLINE}</p>
 
   <p class="front__name">{name}</p>
-  
+
   <div class="front__contact">
     <p class="front__contact-item">📱 {phone}</p>
     <p class="front__contact-item">🌐 {website}</p>

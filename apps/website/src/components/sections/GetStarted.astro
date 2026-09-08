@@ -1,0 +1,110 @@
+---
+import { APP_URL } from '../../constants'
+import { TRIAL_OFFER_COPY } from '@startpos/constants/lib/app'
+
+const steps = [
+  {
+    number: '01',
+    title: 'Create your account',
+    description: 'Sign up in under a minute. No credit card required — your 30-day trial starts immediately.',
+    icon: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`,
+  },
+  {
+    number: '02',
+    title: 'Set up your business',
+    description: 'Add your products, set prices, and configure your branch. Most businesses are ready to sell in less than 10 minutes.',
+    icon: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>`,
+  },
+  {
+    number: '03',
+    title: 'Open your first shift',
+    description: 'Launch the POS, open a cash session, and start processing sales. Works online or offline — no internet needed at checkout.',
+    icon: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>`,
+  },
+  {
+    number: '04',
+    title: 'Grow with confidence',
+    description: 'Add employees, track inventory, view reports, and upgrade your plan whenever you\'re ready. Your data always stays with you.',
+    icon: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>`,
+  },
+]
+---
+
+<section class="py-20 sm:py-24 bg-white">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
+    <!-- Header -->
+    <div class="text-center max-w-2xl mx-auto mb-16 reveal">
+      <span class="inline-flex items-center gap-1.5 bg-emerald-100 text-emerald-700 text-xs font-bold px-3 py-1 rounded-full mb-3">
+        ⚡ Up and running in minutes
+      </span>
+      <h2 class="text-3xl sm:text-4xl font-black text-slate-900 leading-tight">
+        Getting started is simple
+      </h2>
+      <p class="mt-3 text-slate-500 text-base">
+        No training required. No complicated setup. Just sign up and start selling.
+      </p>
+    </div>
+
+    <!-- Steps -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 mb-16">
+      {steps.map((step, i) => (
+        <div class="relative reveal">
+          <!-- Connector line (desktop) -->
+          {i < steps.length - 1 && (
+            <div class="hidden lg:block absolute top-7 left-[calc(50%+2rem)] w-[calc(100%-4rem)] h-px bg-gradient-to-r from-emerald-200 to-slate-100 z-0" />
+          )}
+
+          <div class="relative z-10 flex flex-col items-center text-center">
+            <!-- Icon bubble -->
+            <div class="w-14 h-14 rounded-2xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 mb-4 shadow-sm">
+              <Fragment set:html={step.icon} />
+            </div>
+
+            <!-- Step number -->
+            <span class="text-xs font-bold text-emerald-500 tracking-widest uppercase mb-2">
+              Step {step.number}
+            </span>
+
+            <h3 class="text-base font-bold text-slate-900 mb-2">{step.title}</h3>
+            <p class="text-sm text-slate-500 leading-relaxed">{step.description}</p>
+          </div>
+        </div>
+      ))}
+    </div>
+
+    <!-- CTA -->
+    <div class="reveal">
+      <div class="relative rounded-3xl bg-gradient-to-br from-emerald-500 to-emerald-600 p-10 sm:p-14 text-center overflow-hidden">
+        <!-- Background decoration -->
+        <div class="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[size:48px_48px]"></div>
+        <div class="absolute -top-20 -right-20 w-64 h-64 bg-white/10 rounded-full blur-3xl"></div>
+        <div class="absolute -bottom-20 -left-20 w-64 h-64 bg-emerald-400/20 rounded-full blur-3xl"></div>
+
+        <div class="relative">
+          <h3 class="text-2xl sm:text-3xl font-black text-white mb-3">
+            Your first sale is one click away
+          </h3>
+          <p class="text-emerald-100 text-base mb-8 max-w-lg mx-auto">
+            {TRIAL_OFFER_COPY} · Cancel anytime
+          </p>
+          <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <a
+              href={APP_URL}
+              class="w-full sm:w-auto px-8 py-4 bg-white text-emerald-600 font-bold text-base rounded-xl hover:bg-emerald-50 shadow-lg hover:scale-[1.02] transition-all duration-150"
+            >
+              Start free trial
+            </a>
+            <a
+              href="/pricing"
+              class="w-full sm:w-auto px-8 py-4 border border-emerald-400/50 text-white font-semibold text-base rounded-xl hover:border-white/60 hover:bg-white/5 transition-all duration-150"
+            >
+              View pricing
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>

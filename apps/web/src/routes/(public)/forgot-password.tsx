@@ -11,6 +11,7 @@
  * to prevent email enumeration.
  */
 
+import { OTP_LENGTH } from '@constants/lib/otp'
 import { Form } from '@platform/components/custom/form'
 import { TextInput } from '@platform/components/custom/form/text-input'
 import { ThemeToggle } from '@platform/components/custom/theme/theme-toggle'
@@ -26,16 +27,6 @@ import { useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
 import { z } from 'zod'
 import { resetForgotPassword, sendForgotPasswordOTP, verifyForgotPasswordOTP } from '@/lib/server-fn/forgot-password-otp'
-
-// ---------------------------------------------------------------------------
-// Constants
-// ---------------------------------------------------------------------------
-
-const OTP_LENGTH = 6
-
-// ---------------------------------------------------------------------------
-// Route
-// ---------------------------------------------------------------------------
 
 export const Route = createFileRoute('/(public)/forgot-password')({
   component: RouteComponent,

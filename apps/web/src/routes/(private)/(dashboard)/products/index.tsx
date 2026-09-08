@@ -32,7 +32,7 @@ import { CreateProductSidebar } from './create'
 
 export const Route = createFileRoute('/(private)/(dashboard)/products/')({
   beforeLoad: () => {
-    const user = getAuthenticatedUser
+    const user = getAuthenticatedUser()
     if (!user.entitlement.capabilities.includes(Capabilities.MANAGE_PRODUCTS)) {
       throw redirect({ to: '/unauthorized' })
     }

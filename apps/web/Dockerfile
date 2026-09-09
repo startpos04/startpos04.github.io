@@ -23,8 +23,9 @@ RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
 # ---------- Dev stage ----------
 FROM install AS dev
 RUN --mount=type=cache,target=/var/cache/apt apt-get update -y \
-  && apt-get install -y build-essential libcairo2-dev libpango1.0-dev libjpeg-dev libgif-dev librsvg2-dev \
-  && rm -rf /var/lib/apt/lists/*
+  && apt-get install -y --no-install-recommends build-essential libcairo2-dev libpango1.0-dev libjpeg-dev libgif-dev librsvg2-dev \
+  && rm -rf /var/lib/apt/lists/* \
+  || echo "[WARN] Canvas native libs unavailable — PDF receipt printing will not work in dev"
 COPY . .
 RUN touch apps/web/.env apps/web/.env.local apps/web/.env.config .env.config
 ENV SCHEMA_AUTO_CONFIRM=yes

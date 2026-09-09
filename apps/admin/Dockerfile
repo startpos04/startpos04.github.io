@@ -1,4 +1,4 @@
-# Build context: monorepo root (web/)
+# Build context: monorepo root
 # Run: docker build -f apps/admin/Dockerfile .
 
 # ---------- Base stage ----------
@@ -22,9 +22,6 @@ RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
 
 # ---------- Dev stage ----------
 FROM install AS dev
-RUN --mount=type=cache,target=/var/cache/apt apt-get update -y \
-  && apt-get install -y build-essential libcairo2-dev libpango1.0-dev libjpeg-dev libgif-dev librsvg2-dev \
-  && rm -rf /var/lib/apt/lists/*
 COPY . .
 RUN touch apps/admin/.env apps/admin/.env.local .env.config
 ENV SCHEMA_AUTO_CONFIRM=yes

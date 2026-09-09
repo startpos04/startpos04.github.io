@@ -1,0 +1,77 @@
+// =============================================================================
+// ADMIN MODELS — Platform admin panel accounts
+//
+// Completely separate from the tenant User/Session/Account tables.
+// Admin users cannot log into the tenant app and tenant users cannot log
+// into the admin panel. The Better Auth instance in apps/admin is configured
+// to use these tables via modelMapping.
+// =============================================================================
+
+enum AdminRole {
+  SUPERADMIN // Full platform access
+  SUPPORT    // Read-only access to tenant data, can manage tickets
+  FINANCE    // Access to billing, invoices, subscription management
+  DEVELOPER  // Technical access, can view logs and system config
+}
+
+model AdminUser {
+  id            String    @id @default(cuid())
+  name          String
+  email         String    @unique
+  emailVerified Boolean   @default(false)
+  image         String?
+  role          AdminRole @default(SUPPORT)
+
+  sessions AdminSession[]
+  accounts AdminAccount[]
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@index([deletedAt])
+  @@map("admin_users")
+}
+
+model AdminSession {
+  id        String   @id @default(cuid())
+  expiresAt DateTime
+  token     String   @unique
+  ipAddress String?
+  userAgent String?
+
+  userId String
+  user   AdminUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("admin_sessions")
+}
+
+model AdminAccount {
+  id         String  @id @default(cuid())
+  accountId  String
+  providerId String
+  password   String?
+
+  userId String
+  user   AdminUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("admin_accounts")
+}
+
+model AdminVerification {
+  id         String   @id @default(cuid())
+  identifier String
+  value      String
+  expiresAt  DateTime
+
+  createdAt DateTime? @default(now())
+  updatedAt DateTime? @updatedAt
+
+  @@map("admin_verifications")
+}

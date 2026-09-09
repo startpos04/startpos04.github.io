@@ -1,21 +1,34 @@
-import { getSessionUser } from '@platform/lib/better-auth/auth-server'
-import { platformAuthMiddleware } from '@platform/lib/better-auth/create-auth-middleware'
+import { buildSummaryFromDatabase } from '@platform/lib/authorization/authorization-engine.server'
 import { createServerFn } from '@tanstack/react-start'
+import { getWebRequest } from '@tanstack/react-start/server'
+import { auth } from './auth'
+import { authMiddleware } from './auth-middleware'
 
 // ---------------------------------------------------------------------------
-// getAuthUser — Admin auth context (interim)
+// getAuthUser — Admin auth context
 //
-// TODO: Replace with a dedicated adminAuth instance and adminAuthMiddleware
-// once the AdminUser table and separate betterAuth instance are implemented.
-// Currently this re-uses the tenant session flow which will return undefined
-// for admin accounts that have no Membership record.
-//
-// Tracked as: "Wire up apps/admin with its own auth trio" (task 4 deferred)
+// Reads from AdminSession/AdminUser — never touches the tenant User table.
 // ---------------------------------------------------------------------------
 export const getAuthUser = createServerFn({ method: 'GET' })
-  .middleware([platformAuthMiddleware])
+  .middleware([authMiddleware])
   .handler(async () => {
-    return await getSessionUser()
+    const request = getWebRequest()
+    const session = await auth.api.getSession({ headers: request.headers })
+    if (!session?.user) return undefined
+
+    const authorization = await buildSummaryFromDatabase({
+      userId: session.user.id,
+      role: session.user.role ?? '',
+    })
+
+    return {
+      id: session.user.id,
+      name: session.user.name,
+      email: session.user.email,
+      image: session.user.image ?? null,
+      role: session.user.role ?? null,
+      authorization,
+    }
   })
 
 export type ServerUser = NonNullable<Awaited<ReturnType<typeof getAuthUser>>>

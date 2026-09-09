@@ -28,7 +28,7 @@
     "coverage": "turbo coverage",
     "coverage:integration": "turbo coverage:integration",
 
-    "prisma:generate": "pnpm --filter @startpos/platform prisma:generate",
+    "db:generate": "pnpm --filter @startpos/platform prisma:generate",
     "db:push": "tsx --env-file=apps/web/.env --env-file=.env.config --tsconfig=packages/platform/tsconfig.json packages/platform/prisma/db-push.ts",
     "db:seed": "tsx --env-file=apps/web/.env --env-file=.env.config --tsconfig=packages/platform/tsconfig.json packages/platform/prisma/seeders/index.ts",
     "db:reset": "tsx --env-file=apps/web/.env --env-file=.env.config --tsconfig=packages/platform/tsconfig.json packages/platform/prisma/reset-db.ts",

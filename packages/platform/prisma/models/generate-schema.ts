@@ -44,6 +44,7 @@ const BASE_FILES = [
   'models/base/production.prisma',
   'models/base/goods-receipt.prisma',
   'models/base/pricing.prisma',
+  'models/base/admin.prisma',
 ]
 
 const COUNTRY_FILES: Record<Country, string> = {

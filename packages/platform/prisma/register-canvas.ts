@@ -1,7 +1,6 @@
-// fallow-ignore-file unused-file
 // Optional Node polyfill for @react-pdf/renderer (browser APIs in server-side scripts).
 // Do NOT import this for database seeding — seeders do not use canvas or react-pdf.
-// Usage: tsx --import ./scripts/register-canvas.ts your-script.ts
+// Usage: tsx --import ./packages/platform/prisma/register-canvas.ts your-script.ts
 // Requires native canvas (Linux/Docker dev image has cairo libs; Windows often does not).
 import { Image as CanvasImage, createCanvas } from 'canvas'
 

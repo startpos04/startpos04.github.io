@@ -1,18 +1,34 @@
 {
-  "include": ["src/**/*.ts", "src/**/*.tsx", "vite.config.ts"],
-  "exclude": ["node_modules", "dist", "coverage", "**/*.test.ts", "**/*.test.tsx", "**/*.spec.ts", "**/*.spec.tsx"],
+  "include": ["src/**/*.ts", "src/**/*.tsx", "vite.config.ts", "vite-plugin.ts"],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "coverage",
+    "playwright-report",
+    "__tests__",
+    "src/__tests__",
+    "src/lib/__tests__",
+    "src/test-setup.ts",
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "**/*.spec.ts",
+    "**/*.spec.tsx"
+  ],
+
   "compilerOptions": {
     "target": "ES2022",
     "jsx": "react-jsx",
     "module": "ESNext",
-    "lib": ["ES2022", "DOM", "DOM.Iterable"],
-    "types": ["vite/client"],
+    "lib": ["ES2022", "DOM", "DOM.Iterable", "WebWorker"],
+    "types": ["vite/client", "@types/web-bluetooth"],
 
+    /* Bundler mode */
     "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,
     "verbatimModuleSyntax": false,
     "noEmit": true,
 
+    /* Linting */
     "skipLibCheck": true,
     "strict": true,
     "noUnusedLocals": true,
@@ -24,12 +40,16 @@
     "noUncheckedIndexedAccess": true,
     "noPropertyAccessFromIndexSignature": true,
     "erasableSyntaxOnly": true,
+
     "exactOptionalPropertyTypes": true,
+    "noErrorTruncation": false,
 
     "paths": {
       "prisma/*": ["../../packages/platform/prisma/*"],
       "@/*": ["./src/*"],
-      "@platform/*": ["../../packages/platform/*"]
+      "@platform/*": ["../../packages/platform/*"],
+      "@constants/*": ["../../packages/constants/*"],
+      "@constants": ["../../packages/constants/index.ts"]
     }
   }
 }

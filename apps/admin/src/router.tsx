@@ -2,13 +2,13 @@ import { getQueryClient } from '@platform/lib/query-client'
 import type { QueryClient } from '@tanstack/react-query'
 import { createRouter } from '@tanstack/react-router'
 import { setupRouterSsrQueryIntegration } from '@tanstack/react-router-ssr-query'
+// Import the generated route tree
 import { routeTree } from './routeTree.gen'
 
-export interface AdminRouterContext {
+export interface MyRouterContext {
   queryClient: QueryClient
   isAuthenticated: boolean
 }
-
 export const getRouter = () => {
   const queryClient = getQueryClient()
 
@@ -19,7 +19,10 @@ export const getRouter = () => {
     defaultPreloadStaleTime: 0,
   })
 
-  setupRouterSsrQueryIntegration({ router, queryClient })
+  setupRouterSsrQueryIntegration({
+    router,
+    queryClient,
+  })
 
   return router
 }

@@ -1,0 +1,18 @@
+import { Aside } from '@platform/components/custom/aside'
+import MountManager from '@platform/lib/mount-manager'
+import type { ReactNode } from 'react'
+
+export const AUDIT_ASIDE_ID = 'admin-audit-aside'
+
+export const showAuditSidebar = (children: ReactNode, toggle = false) => {
+  MountManager.show(Aside, {
+    key: AUDIT_ASIDE_ID,
+    target: AUDIT_ASIDE_ID,
+    toggle,
+    children,
+  })
+}
+
+export const closeAuditSidebar = () => {
+  MountManager.clear(AUDIT_ASIDE_ID)
+}

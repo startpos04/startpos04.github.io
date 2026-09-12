@@ -1,10 +1,14 @@
 import type { PermissionKey } from '@platform/lib/authorization/permission-keys'
 import { createMiddleware } from '@tanstack/react-start'
 import { getRequest } from '@tanstack/react-start/server'
-import { auth } from './auth'
+import { authClient } from './auth-client'
 
 export const authMiddleware = createMiddleware().server(async ({ next }) => {
-  const session = await auth.api.getSession({ headers: getRequest().headers })
+  const { data: session } = await authClient.getSession({
+    fetchOptions: {
+      headers: getRequest().headers,
+    },
+  })
 
   if (!session?.user) {
     return await next({
@@ -18,7 +22,7 @@ export const authMiddleware = createMiddleware().server(async ({ next }) => {
   return await next({
     context: {
       user: session.user,
-      authorization: { permissions: [] as PermissionKey[], role: session.user.role ?? '' },
+      authorization: { permissions: [] as PermissionKey[], role: ((session.user as Record<string, unknown>).role as string) ?? '' },
     },
   })
 })

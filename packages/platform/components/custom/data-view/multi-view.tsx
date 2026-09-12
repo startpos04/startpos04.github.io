@@ -55,7 +55,7 @@ export function MultiView<T>({ views, creatable, searchable, label, description,
   )
 
   return (
-    <div className='flex flex-col gap-4 p-4'>
+    <div className='flex flex-col grow gap-4'>
       {(label || description || creatable || searchable || actions || views.list.length > 1) && (
         <div className='flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shrink-0'>
           <div>

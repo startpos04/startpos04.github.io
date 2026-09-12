@@ -342,6 +342,135 @@ const PermissionMetadata: Record<string, { name: string; description: string; ca
     category: 'Production',
   },
 
+  // QA Scope (admin app only)
+  'admin:run:qa-test': {
+    name: 'Run QA Test',
+    description: 'Execute test cases assigned to this user in the QA Companion',
+    category: 'QA Companion',
+  },
+  'admin:assign:qa-test': {
+    name: 'Assign QA Tests',
+    description: 'Assign test cases to testers in the QA Companion',
+    category: 'QA Companion',
+  },
+
+  // Admin — Dashboard
+  'admin:view:dashboard': {
+    name: 'View Dashboard',
+    description: 'Access the admin panel home dashboard',
+    category: 'Admin Dashboard',
+  },
+
+  // Admin — Users
+  'admin:view:users': {
+    name: 'View Tenant Users',
+    description: 'Browse all tenant users across every business',
+    category: 'Admin Users',
+  },
+  'admin:manage:users': {
+    name: 'Manage Tenant Users',
+    description: 'Disable, revoke sessions, and manage tenant user accounts',
+    category: 'Admin Users',
+  },
+
+  // Admin — Businesses
+  'admin:view:businesses': {
+    name: 'View Businesses',
+    description: 'Browse all registered businesses on the platform',
+    category: 'Admin Businesses',
+  },
+  'admin:manage:businesses': {
+    name: 'Manage Businesses',
+    description: 'Suspend and reactivate business accounts',
+    category: 'Admin Businesses',
+  },
+
+  // Admin — Subscriptions
+  'admin:view:subscriptions': {
+    name: 'View Subscriptions',
+    description: 'Browse all business subscriptions',
+    category: 'Admin Billing',
+  },
+  'admin:manage:subscriptions': {
+    name: 'Manage Subscriptions',
+    description: 'Change plans, add credits, extend trials, and modify subscription status',
+    category: 'Admin Billing',
+  },
+
+  // Admin — Payments
+  'admin:view:payments': {
+    name: 'View Manual Payments',
+    description: 'Browse the manual payment review queue',
+    category: 'Admin Billing',
+  },
+  'admin:manage:payments': {
+    name: 'Review Manual Payments',
+    description: 'Approve or reject manual payment submissions',
+    category: 'Admin Billing',
+  },
+
+  // Admin — Invoices
+  'admin:view:invoices': {
+    name: 'View Invoices',
+    description: 'Browse all billing invoices across every business',
+    category: 'Admin Billing',
+  },
+
+  // Admin — Notifications
+  'admin:view:notifications': {
+    name: 'View Notifications',
+    description: 'Browse in-app and payment notification history',
+    category: 'Admin Notifications',
+  },
+  'admin:manage:notifications': {
+    name: 'Manage Notifications',
+    description: 'Send manual notifications and retry failed payment queue items',
+    category: 'Admin Notifications',
+  },
+
+  // Admin — Audit Logs
+  'admin:view:audit-logs': {
+    name: 'View Audit Logs',
+    description: 'Browse the immutable audit log of all platform actions',
+    category: 'Admin Audit',
+  },
+
+  // Admin — Platform Config
+  'admin:view:config': {
+    name: 'View Platform Config',
+    description: 'View feature flags and system configuration defaults',
+    category: 'Admin Config',
+  },
+  'admin:manage:config': {
+    name: 'Manage Platform Config',
+    description: 'Toggle feature flags and update system configuration defaults',
+    category: 'Admin Config',
+  },
+
+  // Admin — Accounts
+  'admin:view:accounts': {
+    name: 'View Admin Accounts',
+    description: 'Browse all admin panel user accounts',
+    category: 'Admin Accounts',
+  },
+  'admin:manage:accounts': {
+    name: 'Manage Admin Accounts',
+    description: 'Create, edit, disable, and delete admin user accounts',
+    category: 'Admin Accounts',
+  },
+
+  // Admin — Permissions
+  'admin:view:permissions': {
+    name: 'View Admin Permissions',
+    description: 'View admin permission assignments',
+    category: 'Admin Accounts',
+  },
+  'admin:manage:permissions': {
+    name: 'Manage Admin Permissions',
+    description: 'Grant and revoke custom permissions for admin users',
+    category: 'Admin Accounts',
+  },
+
   // User Scope
   'user:view:account': {
     name: 'View Account',
@@ -415,7 +544,12 @@ export async function PermissionsSeed(prisma: PrismaClient) {
 
   let rolePermissionCount = 0
 
+  const TENANT_ROLES = new Set(['OWNER', 'ADMIN', 'SUPERVISOR', 'CASHIER', 'SERVICE_PROVIDER'])
+
   for (const [role, permissionKeys] of Object.entries(RolePermissions)) {
+    // Skip admin app roles — they are handled in Step 3 via AdminRoleDefaultPermission
+    if (!TENANT_ROLES.has(role)) continue
+
     for (const permissionKey of permissionKeys) {
       const permission = await prisma.permission.findUnique({
         where: { key: permissionKey },
@@ -446,6 +580,84 @@ export async function PermissionsSeed(prisma: PrismaClient) {
   }
 
   console.info(`   ✓  Total ${rolePermissionCount} role default permissions upserted.`)
+
+  // ── Step 3: Seed admin role default permissions ──────────────────────────
+  // These map AdminRole values (SUPERADMIN, TESTER, etc.) to ADMIN-scoped permissions.
+  // Uses a separate table (admin_role_default_permissions) so there's no conflict
+  // with the tenant Role enum used by RoleDefaultPermission.
+  console.info('🔑 Seeding AdminRoleDefaultPermission records...')
+
+  const ADMIN_ROLE_PERMISSIONS: Record<string, string[]> = {
+    SUPERADMIN: [
+      Permissions.ADMIN_VIEW_DASHBOARD,
+      Permissions.ADMIN_VIEW_USERS,
+      Permissions.ADMIN_MANAGE_USERS,
+      Permissions.ADMIN_VIEW_BUSINESSES,
+      Permissions.ADMIN_MANAGE_BUSINESSES,
+      Permissions.ADMIN_VIEW_SUBSCRIPTIONS,
+      Permissions.ADMIN_MANAGE_SUBSCRIPTIONS,
+      Permissions.ADMIN_VIEW_PAYMENTS,
+      Permissions.ADMIN_MANAGE_PAYMENTS,
+      Permissions.ADMIN_VIEW_INVOICES,
+      Permissions.ADMIN_VIEW_NOTIFICATIONS,
+      Permissions.ADMIN_MANAGE_NOTIFICATIONS,
+      Permissions.ADMIN_VIEW_AUDIT_LOGS,
+      Permissions.ADMIN_VIEW_CONFIG,
+      Permissions.ADMIN_MANAGE_CONFIG,
+      Permissions.ADMIN_VIEW_ACCOUNTS,
+      Permissions.ADMIN_MANAGE_ACCOUNTS,
+      Permissions.ADMIN_VIEW_PERMISSIONS,
+      Permissions.ADMIN_MANAGE_PERMISSIONS,
+      Permissions.QA_RUN_TEST,
+      Permissions.QA_ASSIGN_TEST,
+    ],
+    SUPPORT: [
+      Permissions.ADMIN_VIEW_DASHBOARD,
+      Permissions.ADMIN_VIEW_USERS,
+      Permissions.ADMIN_VIEW_BUSINESSES,
+      Permissions.ADMIN_VIEW_SUBSCRIPTIONS,
+      Permissions.ADMIN_VIEW_NOTIFICATIONS,
+      Permissions.ADMIN_VIEW_AUDIT_LOGS,
+    ],
+    FINANCE: [
+      Permissions.ADMIN_VIEW_DASHBOARD,
+      Permissions.ADMIN_VIEW_BUSINESSES,
+      Permissions.ADMIN_VIEW_SUBSCRIPTIONS,
+      Permissions.ADMIN_MANAGE_SUBSCRIPTIONS,
+      Permissions.ADMIN_VIEW_PAYMENTS,
+      Permissions.ADMIN_MANAGE_PAYMENTS,
+      Permissions.ADMIN_VIEW_INVOICES,
+    ],
+    DEVELOPER: [
+      Permissions.ADMIN_VIEW_DASHBOARD,
+      Permissions.ADMIN_VIEW_BUSINESSES,
+      Permissions.ADMIN_VIEW_SUBSCRIPTIONS,
+      Permissions.ADMIN_VIEW_AUDIT_LOGS,
+      Permissions.ADMIN_VIEW_CONFIG,
+      Permissions.ADMIN_MANAGE_CONFIG,
+    ],
+    TESTER: [Permissions.ADMIN_VIEW_DASHBOARD, Permissions.QA_RUN_TEST],
+  }
+
+  let adminRolePermissionCount = 0
+  for (const [role, keys] of Object.entries(ADMIN_ROLE_PERMISSIONS)) {
+    for (const permissionKey of keys) {
+      const permission = await prisma.permission.findUnique({ where: { key: permissionKey } })
+      if (!permission) {
+        console.warn(`   ⚠️  Permission "${permissionKey}" not found for admin role "${role}", skipping.`)
+        continue
+      }
+      await prisma.adminRoleDefaultPermission.upsert({
+        where: { role_permissionId: { role: role as any, permissionId: permission.id } },
+        update: {},
+        create: { role: role as any, permissionId: permission.id },
+      })
+      adminRolePermissionCount++
+    }
+    console.info(`   ✓  AdminRole "${role}" — ${keys.length} default permissions upserted.`)
+  }
+
+  console.info(`   ✓  Total ${adminRolePermissionCount} admin role default permissions upserted.`)
   console.info('✅ Permission seed complete.')
 }
 

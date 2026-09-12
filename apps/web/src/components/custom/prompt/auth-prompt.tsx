@@ -1,4 +1,5 @@
 import { Form } from '@platform/components/custom/form'
+import { PasswordInput } from '@platform/components/custom/form/password-input'
 import { TextInput } from '@platform/components/custom/form/text-input'
 import { Button } from '@platform/components/ui/button'
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@platform/components/ui/dialog'
@@ -57,7 +58,7 @@ export function AuthPrompt({ open, onClose, onConfirm }: AuthPromptProps) {
         <Form onSubmit={form.handleSubmit} className='space-y-4'>
           <form.Field name='email' children={field => <TextInput field={field} label='Email' />} />
 
-          <form.Field name='password' children={field => <TextInput type='password' field={field} label='Password' />} />
+          <form.Field name='password' children={field => <PasswordInput field={field} label='Password' />} />
 
           <form.Subscribe
             selector={state => [state.canSubmit, state.isSubmitting]}

@@ -17,8 +17,10 @@ model Permission {
   updatedAt   DateTime         @updatedAt
 
   // Relations
-  userPermissions UserPermission[]
-  roleDefaults    RoleDefaultPermission[]
+  userPermissions      UserPermission[]
+  adminUserPermissions AdminUserPermission[]
+  roleDefaults         RoleDefaultPermission[]
+  adminRoleDefaults    AdminRoleDefaultPermission[]
 
   @@index([scope, resource, action])
   @@index([category])

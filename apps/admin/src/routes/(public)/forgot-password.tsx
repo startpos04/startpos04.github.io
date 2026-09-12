@@ -13,6 +13,7 @@
 
 import { OTP_LENGTH } from '@constants/lib/otp'
 import { Form } from '@platform/components/custom/form'
+import { PasswordInput } from '@platform/components/custom/form/password-input'
 import { TextInput } from '@platform/components/custom/form/text-input'
 import { ThemeToggle } from '@platform/components/custom/theme/theme-toggle'
 import { Button } from '@platform/components/ui/button'
@@ -232,11 +233,11 @@ function NewPasswordStep({ email, otp, onBack }: NewPasswordStepProps) {
         <CardContent className='space-y-4'>
           <form.Field
             name='password'
-            children={field => <TextInput field={field} label='New password' type='password' placeholder='At least 6 characters' />}
+            children={field => <PasswordInput field={field} label='New password' placeholder='At least 6 characters' autoComplete='new-password' />}
           />
           <form.Field
             name='confirmPassword'
-            children={field => <TextInput field={field} label='Confirm password' type='password' placeholder='Repeat your new password' />}
+            children={field => <PasswordInput field={field} label='Confirm password' placeholder='Repeat your new password' autoComplete='new-password' />}
           />
         </CardContent>
 

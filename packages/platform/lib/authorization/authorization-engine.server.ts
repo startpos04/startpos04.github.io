@@ -1,10 +1,13 @@
 /**
  * authorization-engine.server.ts - Server-only authorization functions
  *
- * This file contains authorization logic that directly queries the database.
- * It should NEVER be imported by client code.
+ * Handles both tenant users (User / UserPermission) and admin app users
+ * (AdminUser / AdminUserPermission / AdminRoleDefaultPermission).
  *
- * For client/universal code, use authorization-engine.ts which reads from collections.
+ * Admin roles:  SUPERADMIN | TESTER | SUPPORT | FINANCE | DEVELOPER
+ * Tenant roles: OWNER | ADMIN | SUPERVISOR | CASHIER | SERVICE_PROVIDER
+ *
+ * NEVER import this file in client code.
  */
 
 import { prisma as rootPrisma } from '@platform/lib/prisma-client'
@@ -12,78 +15,85 @@ import type { AuthorizationContext, PermissionSummary } from './authorization-en
 import type { PermissionKey } from './permission-keys'
 import { getDefaultPermissionsForRole } from './role-permissions'
 
+const ADMIN_ROLES = new Set(['SUPERADMIN', 'TESTER', 'SUPPORT', 'FINANCE', 'DEVELOPER'])
+
 /**
- * Build a complete permission summary for a user by querying the database directly.
- * This is server-only and should be used when you need fresh data from the database.
+ * Build a complete permission summary by querying the database directly.
  *
- * For most cases, use AuthorizationEngine.buildSummaryFromCollections() instead,
- * which works offline and is faster (reads from memory).
- *
- * @param ctx - Authorization context with userId and role
- * @returns PermissionSummary with final permissions and custom grants/revokes
- *
- * @example
- * const summary = await buildSummaryFromDatabase({ userId: '123', role: 'ADMIN' })
- * console.log(summary.permissions) // ['business:view:billing', ...]
+ * For admin roles, reads from admin_role_default_permissions and
+ * admin_user_permissions. For tenant roles, reads from the standard
+ * user_permissions table.
  */
 export async function buildSummaryFromDatabase(ctx: AuthorizationContext): Promise<PermissionSummary> {
-  // 1. Get role default permissions
-  const roleDefaults = getDefaultPermissionsForRole(ctx.role)
-
-  // 2. Get user-specific permission grants/revokes from database
   const now = new Date()
 
-  // Fetch user permissions from database
+  if (ADMIN_ROLES.has(ctx.role)) {
+    // ── Admin user path ────────────────────────────────────────────────────
+
+    // Role defaults come from adminRoleDefaultPermission rows (seeded via permissions seeder)
+    const adminRoleDefaults = await rootPrisma.adminRoleDefaultPermission.findMany({
+      where: { role: ctx.role as any },
+      include: { permission: { select: { key: true } } },
+    })
+    const roleDefaultKeys = adminRoleDefaults.map(r => r.permission.key as PermissionKey)
+
+    // Per-user overrides (custom grants / revokes)
+    const userOverrides = await rootPrisma.adminUserPermission.findMany({
+      where: {
+        userId: ctx.userId,
+        OR: [{ expiresAt: null }, { expiresAt: { gt: now } }],
+      },
+      include: { permission: { select: { key: true } } },
+    })
+
+    const grants = userOverrides.filter(u => u.granted).map(u => u.permission.key as PermissionKey)
+    const revokes = userOverrides.filter(u => !u.granted).map(u => u.permission.key as PermissionKey)
+
+    const finalPermissions = new Set<PermissionKey>([...roleDefaultKeys, ...grants])
+    revokes.forEach(p => finalPermissions.delete(p))
+
+    return {
+      permissions: Array.from(finalPermissions),
+      role: ctx.role,
+      customGrants: grants.filter(p => !roleDefaultKeys.includes(p)),
+      customRevokes: revokes.filter(p => roleDefaultKeys.includes(p)),
+    }
+  }
+
+  // ── Tenant user path ───────────────────────────────────────────────────
+
+  const roleDefaults = getDefaultPermissionsForRole(ctx.role)
+
   const dbUserPermissions = await rootPrisma.userPermission.findMany({
     where: {
       userId: ctx.userId,
       OR: [{ expiresAt: null }, { expiresAt: { gt: now } }],
     },
-    select: {
-      userId: true,
-      permissionId: true,
-      granted: true,
-      expiresAt: true,
-    },
+    select: { permissionId: true, granted: true },
   })
 
-  // Fetch all permissions to build the map
   const dbPermissions = await rootPrisma.permission.findMany({
-    select: {
-      id: true,
-      key: true,
-    },
+    select: { id: true, key: true },
   })
-
   const permissionMap = new Map(dbPermissions.map(p => [p.id, p.key]))
 
-  // 3. Separate grants and revokes
   const grants = dbUserPermissions
     .filter(up => up.granted)
     .map(up => permissionMap.get(up.permissionId) as PermissionKey)
-    .filter(Boolean) // Remove undefined values
+    .filter(Boolean)
 
   const revokes = dbUserPermissions
     .filter(up => !up.granted)
     .map(up => permissionMap.get(up.permissionId) as PermissionKey)
-    .filter(Boolean) // Remove undefined values
+    .filter(Boolean)
 
-  // 4. Calculate final permission set
   const finalPermissions = new Set<PermissionKey>([...roleDefaults, ...grants])
-
-  // Remove explicitly revoked permissions
-  revokes.forEach(permission => {
-    finalPermissions.delete(permission)
-  })
-
-  // 5. Calculate custom grants and revokes for UI display
-  const customGrants = grants.filter(p => !roleDefaults.includes(p))
-  const customRevokes = revokes.filter(p => roleDefaults.includes(p))
+  revokes.forEach(p => finalPermissions.delete(p))
 
   return {
     permissions: Array.from(finalPermissions),
     role: ctx.role,
-    customGrants,
-    customRevokes,
+    customGrants: grants.filter(p => !roleDefaults.includes(p)),
+    customRevokes: revokes.filter(p => roleDefaults.includes(p)),
   }
 }

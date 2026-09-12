@@ -137,6 +137,55 @@ export const Permissions = {
   USER_CHANGE_PASSWORD: 'user:change:password',
   USER_MANAGE_PREFERENCES: 'user:manage:preferences',
   USER_MANAGE_PERMISSIONS: 'user:manage:permissions',
+
+  // ===================================================================
+  // ADMIN SCOPE - Platform admin app permissions
+  // Covers all admin-app-only capabilities (QA, support tools, etc.)
+  // ===================================================================
+
+  QA_RUN_TEST: 'admin:run:qa-test', // Run tests assigned to the user
+  QA_ASSIGN_TEST: 'admin:assign:qa-test', // Assign tests to testers
+
+  // Dashboard
+  ADMIN_VIEW_DASHBOARD: 'admin:view:dashboard',
+
+  // Users (tenant users)
+  ADMIN_VIEW_USERS: 'admin:view:users',
+  ADMIN_MANAGE_USERS: 'admin:manage:users',
+
+  // Businesses
+  ADMIN_VIEW_BUSINESSES: 'admin:view:businesses',
+  ADMIN_MANAGE_BUSINESSES: 'admin:manage:businesses',
+
+  // Subscriptions
+  ADMIN_VIEW_SUBSCRIPTIONS: 'admin:view:subscriptions',
+  ADMIN_MANAGE_SUBSCRIPTIONS: 'admin:manage:subscriptions',
+
+  // Payments
+  ADMIN_VIEW_PAYMENTS: 'admin:view:payments',
+  ADMIN_MANAGE_PAYMENTS: 'admin:manage:payments',
+
+  // Invoices
+  ADMIN_VIEW_INVOICES: 'admin:view:invoices',
+
+  // Notifications
+  ADMIN_VIEW_NOTIFICATIONS: 'admin:view:notifications',
+  ADMIN_MANAGE_NOTIFICATIONS: 'admin:manage:notifications',
+
+  // Audit Logs
+  ADMIN_VIEW_AUDIT_LOGS: 'admin:view:audit-logs',
+
+  // Platform Config
+  ADMIN_VIEW_CONFIG: 'admin:view:config',
+  ADMIN_MANAGE_CONFIG: 'admin:manage:config',
+
+  // Admin Accounts
+  ADMIN_VIEW_ACCOUNTS: 'admin:view:accounts',
+  ADMIN_MANAGE_ACCOUNTS: 'admin:manage:accounts',
+
+  // Admin Permissions
+  ADMIN_VIEW_PERMISSIONS: 'admin:view:permissions',
+  ADMIN_MANAGE_PERMISSIONS: 'admin:manage:permissions',
 } as const
 
 export type PermissionKey = (typeof Permissions)[keyof typeof Permissions]
@@ -145,9 +194,9 @@ export type PermissionKey = (typeof Permissions)[keyof typeof Permissions]
  * Helper to extract scope from permission and return as enum value
  * @example getPermissionScope('business:view:billing') // 'BUSINESS'
  */
-export function getPermissionScope(permission: PermissionKey): 'BUSINESS' | 'BRANCH' | 'USER' {
+export function getPermissionScope(permission: PermissionKey): 'BUSINESS' | 'BRANCH' | 'USER' | 'ADMIN' {
   const scope = permission.split(':')[0]?.toUpperCase()
-  return scope as 'BUSINESS' | 'BRANCH' | 'USER'
+  return scope as 'BUSINESS' | 'BRANCH' | 'USER' | 'ADMIN'
 }
 
 /**

@@ -49,12 +49,7 @@ if (typeof window !== 'undefined') {
 
     // Create a null persistence that effectively disables persistence
     // Collections will still work but data won't be saved
-    persistence = {
-      getItem: async () => null,
-      setItem: async () => {},
-      removeItem: async () => {},
-      getAllKeys: async () => [],
-    } as PersistedCollectionPersistence
+    persistence = {} as PersistedCollectionPersistence
   }
 }
 

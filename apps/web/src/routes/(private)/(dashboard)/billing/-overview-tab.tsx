@@ -86,8 +86,8 @@ export function OverviewTab() {
     !isUnlimitedTx && displayQuotaRemaining !== null && displayQuotaRemaining > 0 && displayQuotaRemaining <= (displayQuotaUsed + displayQuotaRemaining) * 0.2
 
   return (
-    <div className='h-full overflow-y-auto'>
-      <div className='max-w-5xl space-y-6 p-1'>
+    <div className='h-full overflow-y-auto px-4'>
+      <div className='max-w-5xl space-y-6 py-1'>
         {/* Branch Status Cards */}
         <div className='grid gap-4 sm:grid-cols-2 lg:grid-cols-3'>
           <Card>

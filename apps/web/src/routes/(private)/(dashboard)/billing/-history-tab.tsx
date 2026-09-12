@@ -29,7 +29,7 @@ export function HistoryTab() {
   ])
 
   return (
-    <div className='space-y-4'>
+    <div className='space-y-4 grow flex flex-col px-4'>
       {/* Header section */}
       <div className='space-y-1'>
         <h2 className='text-lg font-semibold'>Credit Transaction History</h2>
@@ -42,7 +42,6 @@ export function HistoryTab() {
         columns={columns}
         isFetching={isLoading}
         emptyMessage='No credit transactions found. Credit purchases and usage will appear here.'
-        className='min-h-[500px]'
       />
     </div>
   )

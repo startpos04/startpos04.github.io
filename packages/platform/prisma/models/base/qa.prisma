@@ -1,0 +1,168 @@
+// =============================================================================
+// QA COMPANION MODELS
+//
+// Stores execution history for the QA Companion feature in apps/admin.
+// Test definitions are source-controlled TypeScript files in
+// apps/admin/qa-definitions/. This schema only stores operational data:
+// runs, results, defects, condition states.
+//
+// Admin-only: these tables are never synced to offline collections and
+// are never queried by the tenant POS app.
+// =============================================================================
+
+// QaCampaign — a named test effort (e.g. "StartPOS V1 Certification")
+model QaCampaign {
+  id          String           @id @default(cuid())
+  name        String
+  description String?
+  status      QaCampaignStatus @default(ACTIVE)
+  targetBuild String? // git SHA or version string
+
+  createdById String // AdminUser.id (not a FK — AdminUser is in the same schema)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  runs QaTestRun[]
+
+  @@map("qa_campaigns")
+}
+
+// QaTestRun — one execution of one test case by one tester
+model QaTestRun {
+  id         String      @id @default(cuid())
+  testCaseId String // references the source-controlled definition ID (not a FK)
+  campaignId String?
+  campaign   QaCampaign? @relation(fields: [campaignId], references: [id])
+
+  testerId    String // AdminUser.id (snapshot — not a FK to allow admin deletions)
+  testerName  String // snapshot of name at run time
+  testerEmail String // snapshot of email at run time
+
+  status      QaRunStatus
+  buildRef    String? // git SHA or deployment ID at time of test
+  environment String      @default("qa")
+
+  startedAt   DateTime  @default(now())
+  completedAt DateTime?
+
+  result QaTestResult?
+
+  @@index([testCaseId])
+  @@index([testerId])
+  @@map("qa_test_runs")
+}
+
+// QaTestResult — the outcome recorded by the tester at the end of a run
+model QaTestResult {
+  id    String    @id @default(cuid())
+  runId String    @unique
+  run   QaTestRun @relation(fields: [runId], references: [id], onDelete: Cascade)
+
+  outcome           QaOutcome
+  testerNote        String? // free-text observation from the tester
+  screenshot        String? // base64 data URI or external URL
+  statesEstablished String[] // condition IDs this run proves satisfied
+
+  createdAt DateTime @default(now())
+
+  @@map("qa_test_results")
+}
+
+// QaDefect — a failure that needs developer investigation
+model QaDefect {
+  id         String @id @default(cuid())
+  testCaseId String // test where it was found
+  runId      String // QaTestRun.id
+
+  title       String // auto-derived from test case title
+  description String // tester's observation
+
+  status   QaDefectStatus @default(OPEN)
+  priority QaPriority
+
+  buildFound String? // build where defect was first observed
+  buildFixed String? // build where it was resolved
+
+  fixNote     String? // developer note on the resolution
+  resolvedAt  DateTime?
+  retestRunId String? // QaTestRun.id of the retest that resolved this
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([testCaseId])
+  @@index([status])
+  @@map("qa_defects")
+}
+
+// QaTestAssignment — super admin assigns a test case to a tester (AdminUser)
+model QaTestAssignment {
+  id            String   @id @default(cuid())
+  testCaseId    String // source-controlled test case ID (e.g. "TC-POS-001")
+  assigneeId    String // AdminUser.id
+  assigneeName  String // snapshot of name at assignment time
+  assigneeEmail String // snapshot of email at assignment time
+  assignedById  String // AdminUser.id of the super admin who made the assignment
+  assignedAt    DateTime @default(now())
+
+  @@unique([testCaseId, assigneeId])
+  @@index([testCaseId])
+  @@index([assigneeId])
+  @@map("qa_test_assignments")
+}
+
+// QaConditionState — tracks whether a reusable condition is currently satisfied
+// Used for the campaign progress dashboard (informational only — live DB checks
+// are always performed when a test is opened; this is never used as a gate).
+model QaConditionState {
+  id                 String    @id @default(cuid())
+  conditionId        String    @unique // e.g. "env.qa_cashier_account"
+  satisfied          Boolean   @default(false)
+  establishedByRunId String? // QaTestRun.id that last set satisfied = true
+  invalidatedAt      DateTime?
+  buildRef           String?
+
+  updatedAt DateTime @updatedAt
+
+  @@map("qa_condition_states")
+}
+
+// ---------------------------------------------------------------------------
+// QA Enums
+// ---------------------------------------------------------------------------
+
+enum QaCampaignStatus {
+  ACTIVE
+  COMPLETED
+  ARCHIVED
+}
+
+enum QaRunStatus {
+  IN_PROGRESS
+  COMPLETED
+  ABANDONED
+}
+
+enum QaOutcome {
+  PASSED
+  FAILED
+  BLOCKED
+  SKIPPED
+}
+
+enum QaDefectStatus {
+  OPEN
+  INVESTIGATING
+  FIXED
+  RETEST_REQUIRED
+  RETEST_FAILED
+  RESOLVED
+  WONT_FIX
+}
+
+enum QaPriority {
+  CRITICAL
+  HIGH
+  MEDIUM
+  LOW
+}

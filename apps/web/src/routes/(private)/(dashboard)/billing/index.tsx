@@ -34,16 +34,16 @@ function BranchBillingPage() {
   const defaultValue = tab && VALID_TABS.has(tab) ? tab : 'Overview'
 
   return (
-    <div className='flex flex-col h-full px-4'>
+    <div className='flex flex-col h-full'>
       {/* Page header - fixed */}
-      <div className='flex-shrink-0 pb-4'>
+      <div className='shrink-0 pb-4  px-4'>
         <h1 className='text-2xl font-bold tracking-tight text-foreground'>Branch Billing</h1>
         <p className='text-muted-foreground text-sm mt-0.5'>Manage your branch's transaction credits and quota settings.</p>
       </div>
 
       {/* Tabs with scrollable content */}
       <div className='flex-1 min-h-0'>
-        <Tab defaultValue={defaultValue} tabs={[...TABS]} className='h-full' />
+        <Tab defaultValue={defaultValue} tabs={[...TABS]} className='h-full' tabClass='px-4' />
       </div>
 
       {/* Mount Manager handles dialogs */}

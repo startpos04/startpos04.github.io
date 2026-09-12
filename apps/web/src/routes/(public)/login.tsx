@@ -1,4 +1,5 @@
 import { Form } from '@platform/components/custom/form'
+import { PasswordInput } from '@platform/components/custom/form/password-input'
 import { TextInput } from '@platform/components/custom/form/text-input'
 import { ThemeToggle } from '@platform/components/custom/theme/theme-toggle'
 import { Button } from '@platform/components/ui/button'
@@ -52,7 +53,7 @@ function RouteComponent() {
         <Form onSubmit={form.handleSubmit} className='space-y-6'>
           <CardContent className='space-y-4'>
             <form.Field name='email' children={field => <TextInput field={field} label='Email' placeholder='name@example.com' data-testid='email-input' />} />
-            <form.Field name='password' children={field => <TextInput field={field} label='Password' type='password' data-testid='password-input' />} />
+            <form.Field name='password' children={field => <PasswordInput field={field} label='Password' data-testid='password-input' />} />
           </CardContent>
 
           <CardFooter className='flex flex-col gap-4'>

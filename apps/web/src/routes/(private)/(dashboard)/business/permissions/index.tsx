@@ -33,7 +33,7 @@ function RouteComponent() {
 
   return (
     <RequirePermission permission={Permissions.USER_MANAGE_PERMISSIONS}>
-      <div className='px-4 grow flex flex-col gap-2'>
+      <div className='grow flex flex-col gap-2'>
         {/* Tabs */}
         <PermissionManagementTabs defaultTab={tab} />
       </div>
@@ -41,7 +41,7 @@ function RouteComponent() {
   )
 }
 
-function PermissionManagementTabs({ defaultTab }: { defaultTab?: string }) {
+function PermissionManagementTabs({ defaultTab }: { defaultTab?: string | undefined }) {
   const TABS = [
     {
       label: 'Permissions',

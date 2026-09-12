@@ -1,9 +1,14 @@
 import { createFileRoute, Outlet } from '@tanstack/react-router'
+import { Dashboard } from '@/components/custom/dashboard'
 
 export const Route = createFileRoute('/(private)/(dashboard)')({
-  component: () => (
-    <div className='min-h-screen bg-background'>
-      <Outlet />
-    </div>
-  ),
+  component: DashboardLayout,
 })
+
+function DashboardLayout() {
+  return (
+    <Dashboard>
+      <Outlet />
+    </Dashboard>
+  )
+}

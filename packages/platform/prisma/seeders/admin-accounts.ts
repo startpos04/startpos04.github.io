@@ -31,6 +31,12 @@ const ADMIN_ACCOUNTS = [
     name: 'Support Admin',
     role: 'SUPPORT',
   },
+  {
+    id: 'admin-tester-1',
+    email: 'tester@startpos.com',
+    name: 'QA Tester',
+    role: 'TESTER',
+  },
 ]
 
 export default async function seedAdminAccounts(prisma: PrismaClient) {

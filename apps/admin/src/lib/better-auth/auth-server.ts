@@ -1,7 +1,7 @@
 import { buildSummaryFromDatabase } from '@platform/lib/authorization/authorization-engine.server'
 import { createServerFn } from '@tanstack/react-start'
-import { getWebRequest } from '@tanstack/react-start/server'
-import { auth } from './auth'
+import { getRequest } from '@tanstack/react-start/server'
+import { authClient } from './auth-client'
 import { authMiddleware } from './auth-middleware'
 
 // ---------------------------------------------------------------------------
@@ -12,9 +12,16 @@ import { authMiddleware } from './auth-middleware'
 export const getAuthUser = createServerFn({ method: 'GET' })
   .middleware([authMiddleware])
   .handler(async () => {
-    const request = getWebRequest()
-    const session = await auth.api.getSession({ headers: request.headers })
-    if (!session?.user) return undefined
+    const { data: session } = await authClient.getSession({
+      fetchOptions: { headers: getRequest().headers },
+    })
+
+    if (!session?.user) {
+      console.warn('[admin/getAuthUser] No session found')
+      return undefined
+    }
+
+    console.info('[admin/getAuthUser] Session found for:', session.user.email)
 
     const authorization = await buildSummaryFromDatabase({
       userId: session.user.id,

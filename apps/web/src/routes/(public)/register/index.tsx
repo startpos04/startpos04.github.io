@@ -28,6 +28,7 @@ import { TRIAL_DURATION_DAYS, TRIAL_TX_LIMIT } from '@constants/lib/app'
 import { COMPLIMENTARY_CREDITS } from '@constants/lib/credits'
 import { OTP_LENGTH } from '@constants/lib/otp'
 import { Form } from '@platform/components/custom/form'
+import { PasswordInput } from '@platform/components/custom/form/password-input'
 import { TextInput } from '@platform/components/custom/form/text-input'
 import { ThemeToggle } from '@platform/components/custom/theme/theme-toggle'
 import { Button } from '@platform/components/ui/button'
@@ -493,7 +494,9 @@ function RouteComponent() {
             <form.Field name='email' children={field => <TextInput field={field} label='Email' placeholder='juan@example.com' data-testid='email-input' />} />
             <form.Field
               name='password'
-              children={field => <TextInput field={field} label='Password' type='password' placeholder='At least 6 characters' data-testid='password-input' />}
+              children={field => (
+                <PasswordInput field={field} label='Password' placeholder='At least 6 characters' autoComplete='new-password' data-testid='password-input' />
+              )}
             />
             <form.Field
               name='contactNumber'

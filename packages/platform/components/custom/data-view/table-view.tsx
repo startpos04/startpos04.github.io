@@ -34,8 +34,8 @@ export function TableView<T>(props: TableViewProps<T>) {
   const table = useDataView<T>({ data, columns, paginable, searchable })
 
   return (
-    <div className={cn('flex grow flex-col gap-2', className)}>
-      <div className='rounded-xl border border-border bg-card shadow-sm overflow-hidden relative'>
+    <div className={cn('flex grow flex-col gap-2 h-1', className)}>
+      <div className='rounded-xl border border-border bg-card shadow-sm overflow-hidden relative grow'>
         <Table>
           <TableHeader className='bg-muted/50'>
             {table.getHeaderGroups().map(headerGroup => (

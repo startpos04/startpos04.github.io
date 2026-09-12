@@ -32,6 +32,7 @@
     "db:push": "tsx --env-file=apps/web/.env --env-file=.env.config --tsconfig=packages/platform/tsconfig.json packages/platform/prisma/db-push.ts",
     "db:seed": "tsx --env-file=apps/web/.env --env-file=.env.config --tsconfig=packages/platform/tsconfig.json packages/platform/prisma/seeders/index.ts",
     "db:reset": "tsx --env-file=apps/web/.env --env-file=.env.config --tsconfig=packages/platform/tsconfig.json packages/platform/prisma/reset-db.ts",
+    "db:studio": "tsx --env-file=apps/web/.env --env-file=.env.config scripts/db-studio.ts",
 
     "docker:web": "docker compose --env-file apps/web/.env up --build --watch web db db-init",
     "docker:admin": "docker compose --env-file apps/admin/.env up --build --watch admin db db-init",

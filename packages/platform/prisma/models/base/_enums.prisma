@@ -41,10 +41,10 @@ enum ConfigDataType {
 }
 
 enum ConfigurationScope {
-  PLATFORM  // Global defaults (billing policies, add-on pricing)
-  BUSINESS  // Business-level config (tax rate, locale)
-  BRANCH    // Branch-level overrides
-  USER      // User preferences (future)
+  PLATFORM // Global defaults (billing policies, add-on pricing)
+  BUSINESS // Business-level config (tax rate, locale)
+  BRANCH // Branch-level overrides
+  USER // User preferences (future)
 }
 
 enum ConfigurationKey {
@@ -115,6 +115,7 @@ enum PermissionScope {
   BUSINESS // Business-level resources (multi-branch)
   BRANCH // Branch-level resources
   USER // User's own account
+  ADMIN // Platform admin app permissions (QA, support tools, etc.)
 }
 
 enum PermissionAction {
@@ -129,6 +130,8 @@ enum PermissionAction {
   CANCEL // Cancel records (e.g., cancel orders)
   REFUND // Refund transactions
   CHANGE // Change values (e.g., change password)
+  RUN // Execute an action (e.g., run a QA test)
+  ASSIGN // Assign records to users (e.g., assign QA tests)
 }
 
 // --- PRODUCT & RESOURCE ENGINE ---
@@ -299,47 +302,47 @@ enum PaymentMethod2 {
 // Payment statuses for billing payments
 enum PaymentStatus {
   PENDING
-  PENDING_APPROVAL     // Manual payments awaiting admin review
-  PROCESSING           // Payment is being processed by provider
+  PENDING_APPROVAL // Manual payments awaiting admin review
+  PROCESSING // Payment is being processed by provider
   SUCCEEDED
   FAILED
   EXPIRED
   REFUNDED
   CANCELLED
-  PARTIALLY_APPLIED    // Advance payment partially consumed
-  FULLY_APPLIED        // Advance payment fully consumed
+  PARTIALLY_APPLIED // Advance payment partially consumed
+  FULLY_APPLIED // Advance payment fully consumed
 }
 
 // Payment synchronization status
 enum PaymentSyncStatus {
-  NOT_REQUIRED  // No provider sync needed (manual-only mode)
-  PENDING       // Approved, awaiting sync
-  IN_PROGRESS   // Sync request in flight
-  COMPLETED     // Successfully synced
-  FAILED        // Sync failed, needs retry
-  SKIPPED       // Deliberately skipped (e.g., already credited)
+  NOT_REQUIRED // No provider sync needed (manual-only mode)
+  PENDING // Approved, awaiting sync
+  IN_PROGRESS // Sync request in flight
+  COMPLETED // Successfully synced
+  FAILED // Sync failed, needs retry
+  SKIPPED // Deliberately skipped (e.g., already credited)
 }
 
 // Payment notification types
 enum PaymentNotificationType {
-  UPCOMING_RENEWAL_7D      // 7 days before renewal
-  UPCOMING_RENEWAL_3D      // 3 days before renewal
-  UPCOMING_RENEWAL_1D      // 1 day before renewal
+  UPCOMING_RENEWAL_7D // 7 days before renewal
+  UPCOMING_RENEWAL_3D // 3 days before renewal
+  UPCOMING_RENEWAL_1D // 1 day before renewal
   ADVANCE_PAYMENT_EXPIRING // Advance credits running out
-  MANUAL_PAYMENT_APPROVED  // Admin approved manual payment
-  MANUAL_PAYMENT_REJECTED  // Admin rejected manual payment
-  PAYMENT_FAILED           // Automated payment failed
-  SUBSCRIPTION_EXPIRING    // No advance credits, subscription expiring
+  MANUAL_PAYMENT_APPROVED // Admin approved manual payment
+  MANUAL_PAYMENT_REJECTED // Admin rejected manual payment
+  PAYMENT_FAILED // Automated payment failed
+  SUBSCRIPTION_EXPIRING // No advance credits, subscription expiring
 }
 
 // Payment notification status
 enum PaymentNotificationStatus {
-  SCHEDULED   // Queued, not sent yet
-  SENDING     // Currently being delivered
-  SENT        // Successfully delivered
-  FAILED      // Delivery failed
-  CANCELLED   // Notification cancelled (e.g., payment made early)
-  SKIPPED     // Deliberately skipped (e.g., duplicate)
+  SCHEDULED // Queued, not sent yet
+  SENDING // Currently being delivered
+  SENT // Successfully delivered
+  FAILED // Delivery failed
+  CANCELLED // Notification cancelled (e.g., payment made early)
+  SKIPPED // Deliberately skipped (e.g., duplicate)
 }
 
 // --- Notifications ---

@@ -97,10 +97,10 @@ export function EntitlementsPage() {
   const { planName, status, billingModel, includedTxPerMonth, txUsedThisPeriod } = data
 
   return (
-    <div className='w-full bg-background relative flex gap-4'>
-      <div className='flex-1 min-w-0 flex flex-col bg-background/50'>
+    <div className='w-full bg-background relative flex gap-4 grow'>
+      <div className='flex-1 min-w-0 flex flex-col bg-background/50 px-4 gap-4'>
         {/* Header */}
-        <div className='p-4 border-b bg-background shrink-0'>
+        <div className='bg-background shrink-0'>
           <div className='flex flex-col gap-4'>
             <div>
               <h1 className='text-2xl font-semibold tracking-tight'>Capabilities</h1>
@@ -162,28 +162,26 @@ export function EntitlementsPage() {
         </div>
 
         {/* Table */}
-        <div>
-          <MultiView<EntitlementDetail>
-            data={capabilities}
-            isFetching={isLoading}
-            views={{
-              selectedView: 'table',
-              list: [
-                {
-                  type: 'table',
-                  columns,
-                  selectableRow: {
-                    onClick: handleSelectRow,
-                    isSelected: (capability: EntitlementDetail) => capability.capabilityKey === selectedId,
-                  },
+        <MultiView<EntitlementDetail>
+          data={capabilities}
+          isFetching={isLoading}
+          views={{
+            selectedView: 'table',
+            list: [
+              {
+                type: 'table',
+                columns,
+                selectableRow: {
+                  onClick: handleSelectRow,
+                  isSelected: (capability: EntitlementDetail) => capability.capabilityKey === selectedId,
                 },
-              ],
-            }}
-          />
-        </div>
+              },
+            ],
+          }}
+        />
 
         {/* Footer info cards */}
-        <div className='p-4 border-t bg-background shrink-0 space-y-3'>
+        <div className='bg-background shrink-0 space-y-3'>
           <Card className='bg-muted/50 border-0'>
             <CardContent className='pt-3 pb-3'>
               <div className='flex gap-3'>

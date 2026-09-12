@@ -64,7 +64,7 @@ function RouteComponent() {
   }
 
   return (
-    <div className='w-full min-h-screen bg-background p-6 space-y-6'>
+    <div className='w-full min-h-screen bg-background px-4 pb-4 space-y-4'>
       {/* Header */}
       <div className='flex items-center justify-between'>
         <div>

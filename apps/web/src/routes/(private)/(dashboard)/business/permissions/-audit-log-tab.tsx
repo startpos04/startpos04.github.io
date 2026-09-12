@@ -148,7 +148,7 @@ export function AuditLogTab() {
 
   return (
     <div className='w-full h-full bg-background flex overflow-hidden relative min-h-0 flex-1 gap-4'>
-      <div className='flex-1 min-w-0 h-full flex flex-col overflow-hidden transition-all duration-300 ease-in-out bg-background/50 space-y-2'>
+      <div className='px-4 flex-1 min-w-0 h-full flex flex-col overflow-hidden transition-all duration-300 ease-in-out bg-background/50 space-y-2'>
         <MultiView<AuditEntry>
           label='Permission Audit Log'
           description='Complete history of permission grants and revokes.'

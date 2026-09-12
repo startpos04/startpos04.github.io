@@ -238,6 +238,78 @@ export const RolePermissions: Record<string, PermissionKey[]> = {
     Permissions.USER_CHANGE_PASSWORD,
     Permissions.USER_MANAGE_PREFERENCES,
   ],
+
+  // ===================================================================
+  // ADMIN APP ROLES — defaults resolved via adminRoleDefaultPermission
+  // table (seeded). These entries are kept here as documentation and as
+  // a fallback for getDefaultPermissionsForRole() calls.
+  // ===================================================================
+
+  SUPERADMIN: [
+    // Dashboard
+    Permissions.ADMIN_VIEW_DASHBOARD,
+    // Users
+    Permissions.ADMIN_VIEW_USERS,
+    Permissions.ADMIN_MANAGE_USERS,
+    // Businesses
+    Permissions.ADMIN_VIEW_BUSINESSES,
+    Permissions.ADMIN_MANAGE_BUSINESSES,
+    // Subscriptions
+    Permissions.ADMIN_VIEW_SUBSCRIPTIONS,
+    Permissions.ADMIN_MANAGE_SUBSCRIPTIONS,
+    // Payments
+    Permissions.ADMIN_VIEW_PAYMENTS,
+    Permissions.ADMIN_MANAGE_PAYMENTS,
+    // Invoices
+    Permissions.ADMIN_VIEW_INVOICES,
+    // Notifications
+    Permissions.ADMIN_VIEW_NOTIFICATIONS,
+    Permissions.ADMIN_MANAGE_NOTIFICATIONS,
+    // Audit Logs
+    Permissions.ADMIN_VIEW_AUDIT_LOGS,
+    // Config
+    Permissions.ADMIN_VIEW_CONFIG,
+    Permissions.ADMIN_MANAGE_CONFIG,
+    // Accounts
+    Permissions.ADMIN_VIEW_ACCOUNTS,
+    Permissions.ADMIN_MANAGE_ACCOUNTS,
+    // Permissions
+    Permissions.ADMIN_VIEW_PERMISSIONS,
+    Permissions.ADMIN_MANAGE_PERMISSIONS,
+    // QA
+    Permissions.QA_RUN_TEST,
+    Permissions.QA_ASSIGN_TEST,
+  ],
+
+  SUPPORT: [
+    Permissions.ADMIN_VIEW_DASHBOARD,
+    Permissions.ADMIN_VIEW_USERS,
+    Permissions.ADMIN_VIEW_BUSINESSES,
+    Permissions.ADMIN_VIEW_SUBSCRIPTIONS,
+    Permissions.ADMIN_VIEW_NOTIFICATIONS,
+    Permissions.ADMIN_VIEW_AUDIT_LOGS,
+  ],
+
+  FINANCE: [
+    Permissions.ADMIN_VIEW_DASHBOARD,
+    Permissions.ADMIN_VIEW_BUSINESSES,
+    Permissions.ADMIN_VIEW_SUBSCRIPTIONS,
+    Permissions.ADMIN_MANAGE_SUBSCRIPTIONS,
+    Permissions.ADMIN_VIEW_PAYMENTS,
+    Permissions.ADMIN_MANAGE_PAYMENTS,
+    Permissions.ADMIN_VIEW_INVOICES,
+  ],
+
+  DEVELOPER: [
+    Permissions.ADMIN_VIEW_DASHBOARD,
+    Permissions.ADMIN_VIEW_BUSINESSES,
+    Permissions.ADMIN_VIEW_SUBSCRIPTIONS,
+    Permissions.ADMIN_VIEW_AUDIT_LOGS,
+    Permissions.ADMIN_VIEW_CONFIG,
+    Permissions.ADMIN_MANAGE_CONFIG,
+  ],
+
+  TESTER: [Permissions.ADMIN_VIEW_DASHBOARD, Permissions.QA_RUN_TEST],
 }
 
 /**

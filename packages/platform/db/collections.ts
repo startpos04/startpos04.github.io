@@ -1,6 +1,11 @@
 import type { TaskMetadata, TransactionComplianceData } from '@platform/lib/types'
 import type {
+  AdminUser,
+  AdminUserPermission,
   AuditLog,
+  BillingInvoice,
+  BillingInvoiceItem,
+  BillingPayment,
   Branch,
   BranchCapabilityConfig,
   Business,
@@ -34,6 +39,7 @@ import type {
   ProductVariant,
   Purchase,
   PurchaseItem,
+  QaDefect,
   SequenceCounter,
   Session,
   Supplier,
@@ -319,4 +325,40 @@ export const capabilityConfigurationCollection = createSyncableCollection<Capabi
   apiKey: 'capabilityConfiguration',
   schemaVersion: SCHEMA_VERSION,
   syncMode: 'eager', // Always sync on login for offline configuration access
+})
+
+export const billingPaymentCollection = createSyncableCollection<BillingPayment>({
+  apiKey: 'billingPayment',
+  schemaVersion: SCHEMA_VERSION,
+  syncMode: 'on-demand',
+})
+
+export const billingInvoiceCollection = createSyncableCollection<BillingInvoice>({
+  apiKey: 'billingInvoice',
+  schemaVersion: SCHEMA_VERSION,
+  syncMode: 'on-demand',
+})
+
+export const billingInvoiceItemCollection = createSyncableCollection<BillingInvoiceItem>({
+  apiKey: 'billingInvoiceItem',
+  schemaVersion: SCHEMA_VERSION,
+  syncMode: 'on-demand',
+})
+
+export const adminUserCollection = createSyncableCollection<AdminUser>({
+  apiKey: 'adminUser',
+  schemaVersion: SCHEMA_VERSION,
+  syncMode: 'eager',
+})
+
+export const adminUserPermissionCollection = createSyncableCollection<AdminUserPermission>({
+  apiKey: 'adminUserPermission',
+  schemaVersion: SCHEMA_VERSION,
+  syncMode: 'on-demand',
+})
+
+export const qaDefectCollection = createSyncableCollection<QaDefect>({
+  apiKey: 'qaDefect',
+  schemaVersion: SCHEMA_VERSION,
+  syncMode: 'on-demand',
 })

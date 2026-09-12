@@ -4,15 +4,17 @@ import type { ReactNode } from 'react'
 
 interface AsideProps extends MountProps {
   children?: ReactNode
+  className?: string
 }
 
-export function Aside({ open, children }: AsideProps) {
+export function Aside({ open, children, className }: AsideProps) {
   return (
     <div
       className={cn(
         'h-full bg-card flex flex-col overflow-hidden z-20 shrink-0 transition-all duration-300 ease-in-out rounded-tl-2xl',
         'starting:w-0 starting:border-l-0 starting:border-transparent starting:shadow-none',
         open ? 'w-96 xl:w-lg border border-border shadow-xl' : 'w-0 border-l-0 border-transparent shadow-none',
+        className,
       )}
     >
       <div

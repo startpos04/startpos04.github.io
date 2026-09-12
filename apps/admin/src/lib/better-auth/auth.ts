@@ -2,7 +2,6 @@ import { prisma } from '@platform/lib/prisma-client'
 import { betterAuth } from 'better-auth'
 import { prismaAdapter } from 'better-auth/adapters/prisma'
 import { emailOTP } from 'better-auth/plugins'
-import { tanstackStartCookies } from 'better-auth/tanstack-start'
 import { AdminRole } from 'prisma/generated/prisma/enums'
 import { Resend } from 'resend'
 
@@ -15,16 +14,36 @@ import { Resend } from 'resend'
 export const auth = betterAuth({
   database: prismaAdapter(prisma, {
     provider: 'postgresql',
-    // Map Better Auth's internal table names → our admin-specific tables
-    usePlural: false,
-    modelMapping: {
-      user: 'adminUser',
-      session: 'adminSession',
-      account: 'adminAccount',
-      verification: 'adminVerification',
-    },
   }),
-  baseURL: process.env['BETTER_AUTH_URL'],
+  // Unique cookie name so admin sessions don't collide with the web app's
+  // better-auth.session_token cookie (both run on localhost in dev).
+  advanced: {
+    cookiePrefix: 'admin',
+  },
+  // Map Better Auth's internal model names → our admin-specific Prisma models
+  user: {
+    modelName: 'adminUser',
+    additionalFields: {
+      role: {
+        type: 'string',
+        required: false,
+        defaultValue: AdminRole.SUPPORT,
+        input: false,
+      },
+    },
+  },
+  session: {
+    modelName: 'adminSession',
+  },
+  account: {
+    modelName: 'adminAccount',
+  },
+  verification: {
+    modelName: 'adminVerification',
+  },
+  // Use dynamic baseURL so Better Auth infers the correct origin from each request.
+  // This handles dev (port 3001) vs Docker/production (port 3201) automatically.
+  baseURL: { allowedHosts: ['localhost', '127.0.0.1', 'localhost:3001', 'localhost:3201'] },
   trustedOrigins: [
     process.env['BETTER_AUTH_URL'] || '',
     process.env['BETTER_AUTH_INTERNAL_URL'] || '',
@@ -41,17 +60,7 @@ export const auth = betterAuth({
     window: 60,
     max: 10,
   },
-  user: {
-    additionalFields: {
-      role: {
-        type: 'string',
-        required: false,
-        defaultValue: AdminRole.SUPPORT,
-      },
-    },
-  },
   plugins: [
-    tanstackStartCookies(),
     emailOTP({
       otpLength: 6,
       expiresIn: 600,

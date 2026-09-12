@@ -9,9 +9,10 @@
 
 enum AdminRole {
   SUPERADMIN // Full platform access
-  SUPPORT    // Read-only access to tenant data, can manage tickets
-  FINANCE    // Access to billing, invoices, subscription management
-  DEVELOPER  // Technical access, can view logs and system config
+  SUPPORT // Read-only access to tenant data, can manage tickets
+  FINANCE // Access to billing, invoices, subscription management
+  DEVELOPER // Technical access, can view logs and system config
+  TESTER // QA access — can run the QA Companion, record results, and file defects
 }
 
 model AdminUser {
@@ -25,9 +26,10 @@ model AdminUser {
   sessions AdminSession[]
   accounts AdminAccount[]
 
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  deletedAt DateTime?
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime              @updatedAt
+  deletedAt            DateTime?
+  adminUserPermissions AdminUserPermission[]
 
   @@index([deletedAt])
   @@map("admin_users")
@@ -74,4 +76,47 @@ model AdminVerification {
   updatedAt DateTime? @updatedAt
 
   @@map("admin_verifications")
+}
+
+// =============================================================================
+// ADMIN PERMISSION TABLES
+//
+// Mirrors the tenant UserPermission / RoleDefaultPermission pattern but
+// scoped to AdminUser rather than the tenant User table.
+// The Permission table is shared — permissions with scope=ADMIN are the
+// ones that appear here.
+// =============================================================================
+
+// AdminUserPermission — custom per-user grants/revokes for admin users
+model AdminUserPermission {
+  id           String    @id @default(cuid())
+  userId       String // AdminUser.id
+  permissionId String // Permission.id (scope = ADMIN)
+  granted      Boolean   @default(true) // true = granted, false = explicitly revoked
+  grantedBy    String? // AdminUser.id of granting superadmin
+  grantedAt    DateTime  @default(now())
+  expiresAt    DateTime?
+  note         String?
+
+  user       AdminUser  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, permissionId])
+  @@index([userId, granted])
+  @@index([permissionId])
+  @@map("admin_user_permissions")
+}
+
+// AdminRoleDefaultPermission — which permissions each AdminRole gets by default
+model AdminRoleDefaultPermission {
+  id           String    @id @default(cuid())
+  role         AdminRole
+  permissionId String // Permission.id (scope = ADMIN)
+  createdAt    DateTime  @default(now())
+
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@unique([role, permissionId])
+  @@index([role])
+  @@map("admin_role_default_permissions")
 }

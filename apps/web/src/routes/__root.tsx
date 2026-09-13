@@ -1,3 +1,4 @@
+import { DevTools } from '@platform/components/custom/dev-tools'
 import { NavigationProgress } from '@platform/components/custom/navigation-progress'
 import { ThemeProvider } from '@platform/components/custom/theme/theme-provider'
 import { useSw } from '@platform/hooks/use-sw'
@@ -85,6 +86,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
           <MountManager />
           {children}
           <Toaster theme='system' richColors closeButton position='top-right' />
+          <DevTools />
           <Scripts />
         </ThemeProvider>
       </body>

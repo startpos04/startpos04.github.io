@@ -6,12 +6,16 @@
  */
 
 import { Button } from '@platform/components/ui/button'
+import { useCapability } from '@platform/hooks/use-capability'
+import { Capabilities } from '@platform/lib/entitlement/capability-keys'
 import { Bluetooth, BluetoothConnected, DollarSign } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import { BluetoothPrinter, getBluetoothPrinter } from '@/lib/bluetooth-printer'
 
 export function BluetoothPrinterControl() {
+  const canPrintReceipt = useCapability(Capabilities.PRINT_RECEIPT)
+
   const [printer] = useState(() => getBluetoothPrinter())
   const [isConnected, setIsConnected] = useState(false)
   const [deviceName, setDeviceName] = useState<string | null>(null)
@@ -80,8 +84,9 @@ export function BluetoothPrinterControl() {
     }
   }
 
-  if (!isSupported) {
-    return null // Hide if Bluetooth not supported
+  // Hide if Bluetooth not supported or PRINT_RECEIPT capability is not granted
+  if (!isSupported || !canPrintReceipt) {
+    return null
   }
 
   return (

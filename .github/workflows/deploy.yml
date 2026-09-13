@@ -1,0 +1,183 @@
+name: Deploy
+
+# Triggers:
+#   dev branch  → deploys both apps to dev Vercel projects + runs DB migrations on dev DB
+#   prod branch → deploys both apps to prod Vercel projects + runs DB migrations on prod DB
+
+on:
+  push:
+    branches:
+      - dev
+      - prod
+
+concurrency:
+  group: deploy-${{ github.ref_name }}
+  cancel-in-progress: true
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Reusable environment resolution
+# ─────────────────────────────────────────────────────────────────────────────
+env:
+  IS_PROD: ${{ github.ref_name == 'prod' }}
+
+jobs:
+  # ───────────────────────────────────────────────────────────────────────────
+  # Job 1: Run DB migrations
+  # Runs first — apps must not go live against a stale schema.
+  # ───────────────────────────────────────────────────────────────────────────
+  migrate:
+    name: Run DB Migrations (${{ github.ref_name }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    environment:
+      name: ${{ github.ref_name }}
+
+    env:
+      DATABASE_URL: ${{ github.ref_name == 'prod' && secrets.PROD_DATABASE_URL || secrets.DEV_DATABASE_URL }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          run_install: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma schema
+        run: |
+          printf 'SCHEMA_AUTO_CONFIRM=yes\nDEPLOYMENT_COUNTRY=PH\n' > .env.config
+          pnpm prisma:generate
+
+      - name: Run migrations
+        run: pnpm --filter @startpos/platform db:migrate
+        env:
+          DATABASE_URL: ${{ env.DATABASE_URL }}
+
+  # ───────────────────────────────────────────────────────────────────────────
+  # Job 2: Deploy web app
+  # ───────────────────────────────────────────────────────────────────────────
+  deploy-web:
+    name: Deploy web (${{ github.ref_name }})
+    needs: migrate
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    environment:
+      name: ${{ github.ref_name }}
+      url: ${{ steps.deploy.outputs.deployment-url }}
+
+    env:
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ github.ref_name == 'prod' && secrets.VERCEL_WEB_PROJECT_ID_PROD || secrets.VERCEL_WEB_PROJECT_ID_DEV }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          run_install: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install Vercel CLI
+        run: pnpm add -g vercel@latest
+
+      - name: Pull Vercel environment
+        run: |
+          vercel pull --yes \
+            --environment=${{ github.ref_name == 'prod' && 'production' || 'preview' }} \
+            --token=${{ secrets.VERCEL_TOKEN }}
+        working-directory: apps/web
+
+      - name: Build
+        run: |
+          vercel build \
+            ${{ github.ref_name == 'prod' && '--prod' || '' }} \
+            --token=${{ secrets.VERCEL_TOKEN }}
+        working-directory: apps/web
+
+      - name: Deploy
+        id: deploy
+        run: |
+          url=$(vercel deploy --prebuilt \
+            ${{ github.ref_name == 'prod' && '--prod' || '' }} \
+            --token=${{ secrets.VERCEL_TOKEN }})
+          echo "deployment-url=$url" >> "$GITHUB_OUTPUT"
+          echo "✅ web deployed to: $url"
+        working-directory: apps/web
+
+  # ───────────────────────────────────────────────────────────────────────────
+  # Job 3: Deploy admin app
+  # ───────────────────────────────────────────────────────────────────────────
+  deploy-admin:
+    name: Deploy admin (${{ github.ref_name }})
+    needs: migrate
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    environment:
+      name: ${{ github.ref_name }}
+      url: ${{ steps.deploy.outputs.deployment-url }}
+
+    env:
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ github.ref_name == 'prod' && secrets.VERCEL_ADMIN_PROJECT_ID_PROD || secrets.VERCEL_ADMIN_PROJECT_ID_DEV }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          run_install: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install Vercel CLI
+        run: pnpm add -g vercel@latest
+
+      - name: Pull Vercel environment
+        run: |
+          vercel pull --yes \
+            --environment=${{ github.ref_name == 'prod' && 'production' || 'preview' }} \
+            --token=${{ secrets.VERCEL_TOKEN }}
+        working-directory: apps/admin
+
+      - name: Build
+        run: |
+          vercel build \
+            ${{ github.ref_name == 'prod' && '--prod' || '' }} \
+            --token=${{ secrets.VERCEL_TOKEN }}
+        working-directory: apps/admin
+
+      - name: Deploy
+        id: deploy
+        run: |
+          url=$(vercel deploy --prebuilt \
+            ${{ github.ref_name == 'prod' && '--prod' || '' }} \
+            --token=${{ secrets.VERCEL_TOKEN }})
+          echo "deployment-url=$url" >> "$GITHUB_OUTPUT"
+          echo "✅ admin deployed to: $url"
+        working-directory: apps/admin

@@ -1,0 +1,347 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>App not available — StartPOS</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+        --bg: #0a0a0a;
+        --bg2: #111113;
+        --fg: #f4f4f5;
+        --muted: #a1a1aa;
+        --muted2: #71717a;
+        --border: #27272a;
+        --primary: #10b981;
+        --primary-dim: rgba(16, 185, 129, 0.12);
+        --danger: #ef4444;
+        --danger-dim: rgba(239, 68, 68, 0.1);
+        --radius: 12px;
+      }
+      @media (prefers-color-scheme: light) {
+        :root {
+          --bg: #f9fafb;
+          --bg2: #ffffff;
+          --fg: #111827;
+          --muted: #6b7280;
+          --muted2: #9ca3af;
+          --border: #e5e7eb;
+          --primary-dim: rgba(16, 185, 129, 0.1);
+          --danger-dim: rgba(239, 68, 68, 0.08);
+        }
+      }
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      html, body { height: 100%; }
+      body {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        background: var(--bg);
+        color: var(--fg);
+        gap: 0;
+      }
+
+      .card {
+        max-width: 420px;
+        width: 100%;
+        background: var(--bg2);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 36px 28px 28px;
+        text-align: center;
+      }
+
+      /* Brand logo */
+      .logo {
+        width: 48px;
+        height: 48px;
+        background: var(--primary);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 16px;
+        opacity: 0.6;
+      }
+      .logo svg { width: 26px; height: 26px; }
+
+      /* Red X badge overlaid on logo */
+      .logo-wrap {
+        position: relative;
+        width: fit-content;
+        margin: 0 auto 20px;
+      }
+      .no-badge {
+        position: absolute;
+        bottom: -4px;
+        right: -6px;
+        width: 20px;
+        height: 20px;
+        background: var(--danger);
+        border-radius: 50%;
+        border: 2px solid var(--bg2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .no-badge svg { width: 10px; height: 10px; stroke: white; }
+
+      h1 {
+        font-size: 18px;
+        font-weight: 700;
+        margin-bottom: 8px;
+        letter-spacing: -0.02em;
+      }
+      .subtitle {
+        font-size: 13px;
+        line-height: 1.65;
+        color: var(--muted);
+        margin-bottom: 24px;
+      }
+
+      /* Info box */
+      .info-box {
+        background: var(--danger-dim);
+        border: 1px solid rgba(239,68,68,0.2);
+        border-radius: 8px;
+        padding: 14px 16px;
+        text-align: left;
+        margin-bottom: 24px;
+        display: flex;
+        gap: 12px;
+        align-items: flex-start;
+      }
+      .info-box svg {
+        width: 16px;
+        height: 16px;
+        stroke: var(--danger);
+        flex-shrink: 0;
+        margin-top: 1px;
+      }
+      .info-box p {
+        font-size: 12px;
+        line-height: 1.6;
+        color: var(--muted);
+        margin: 0;
+      }
+      .info-box strong { color: var(--fg); font-weight: 500; }
+
+      /* Steps list */
+      .steps {
+        text-align: left;
+        margin-bottom: 24px;
+      }
+      .steps-title {
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--muted2);
+        margin-bottom: 10px;
+      }
+      .step {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        padding: 8px 0;
+        border-bottom: 1px solid var(--border);
+        font-size: 13px;
+        line-height: 1.5;
+        color: var(--muted);
+      }
+      .step:last-child { border-bottom: none; }
+      .step-num {
+        flex-shrink: 0;
+        width: 20px;
+        height: 20px;
+        background: var(--primary-dim);
+        border: 1px solid rgba(16,185,129,0.2);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 10px;
+        font-weight: 700;
+        color: var(--primary);
+        margin-top: 1px;
+      }
+
+      /* Retry button */
+      .btn-row { margin-bottom: 20px; }
+      .btn {
+        appearance: none;
+        width: 100%;
+        font-size: 14px;
+        font-weight: 500;
+        padding: 10px 20px;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: opacity 0.15s, background 0.15s;
+        background: var(--primary);
+        color: #fff;
+        border: none;
+      }
+      .btn:hover { opacity: 0.88; }
+      .btn:active { transform: translateY(1px); }
+      .btn:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+      }
+
+      /* Status */
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 11px;
+        color: var(--muted);
+        background: var(--bg);
+        border: 1px solid var(--border);
+        padding: 4px 10px;
+        border-radius: 99px;
+      }
+      .dot {
+        width: 5px;
+        height: 5px;
+        border-radius: 50%;
+        background: var(--danger);
+      }
+      .dot.online { background: var(--primary); }
+
+      /* Auto-detecting online */
+      .detecting {
+        font-size: 11px;
+        color: var(--muted2);
+        margin-top: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+      }
+      .blink {
+        width: 5px;
+        height: 5px;
+        border-radius: 50%;
+        background: var(--primary);
+        animation: blink 1.4s ease-in-out infinite;
+      }
+      @keyframes blink {
+        0%, 100% { opacity: 0.2; }
+        50%       { opacity: 1; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <!-- Brand + no-cache badge -->
+      <div class="logo-wrap">
+        <div class="logo">
+          <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M6 5L4 9v14a2 2 0 002 2h20a2 2 0 002-2V9L26 5z" stroke="white" stroke-width="2" stroke-linejoin="round" fill="none"/>
+            <line x1="4" y1="9" x2="28" y2="9" stroke="white" stroke-width="2"/>
+            <path d="M20 13a4 4 0 01-8 0" stroke="white" stroke-width="2" stroke-linecap="round" fill="none"/>
+          </svg>
+        </div>
+        <div class="no-badge">
+          <svg viewBox="0 0 12 12" fill="none" stroke-width="2" stroke-linecap="round">
+            <line x1="2" y1="2" x2="10" y2="10"/>
+            <line x1="10" y1="2" x2="2" y2="10"/>
+          </svg>
+        </div>
+      </div>
+
+      <h1>App not available offline</h1>
+      <p class="subtitle">
+        No cached version of StartPOS was found on this device.
+        You need an internet connection to load the app for the first time.
+      </p>
+
+      <!-- Error detail -->
+      <div class="info-box">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/>
+          <line x1="12" y1="8" x2="12" y2="12"/>
+          <line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+        <p>
+          <strong>No cache detected.</strong> The app caches itself automatically after your first visit online. Once cached, it will load instantly — even without internet.
+        </p>
+      </div>
+
+      <!-- Steps to fix -->
+      <div class="steps">
+        <p class="steps-title">To get started</p>
+        <div class="step">
+          <span class="step-num">1</span>
+          <span>Connect to Wi-Fi or mobile data</span>
+        </div>
+        <div class="step">
+          <span class="step-num">2</span>
+          <span>Click <strong style="color:var(--fg)">Reload</strong> below to load the app</span>
+        </div>
+        <div class="step">
+          <span class="step-num">3</span>
+          <span>The app will cache automatically — future offline use will work without these steps</span>
+        </div>
+      </div>
+
+      <!-- Reload button -->
+      <div class="btn-row">
+        <button class="btn" id="reload-btn" onclick="reload()" disabled>
+          <span id="btn-text">Waiting for connection…</span>
+        </button>
+      </div>
+
+      <!-- Status -->
+      <div class="pill">
+        <span class="dot" id="dot"></span>
+        <span id="status-text">No internet connection</span>
+      </div>
+
+      <div class="detecting">
+        <span class="blink"></span>
+        <span>Watching for connection…</span>
+      </div>
+    </div>
+
+    <script>
+      var reloadBtn = document.getElementById('reload-btn')
+      var btnText   = document.getElementById('btn-text')
+      var dot       = document.getElementById('dot')
+      var statusText = document.getElementById('status-text')
+
+      function reload() {
+        btnText.textContent = 'Loading…'
+        reloadBtn.disabled = true
+        window.location.reload()
+      }
+
+      function setOnline() {
+        dot.classList.add('online')
+        statusText.textContent = 'Connected — ready to load'
+        reloadBtn.disabled = false
+        btnText.textContent = 'Reload app'
+        // Auto-reload after a brief moment so the user sees the status change
+        setTimeout(reload, 1200)
+      }
+
+      function setOffline() {
+        dot.classList.remove('online')
+        statusText.textContent = 'No internet connection'
+        reloadBtn.disabled = true
+        btnText.textContent = 'Waiting for connection…'
+      }
+
+      window.addEventListener('online', setOnline)
+      window.addEventListener('offline', setOffline)
+
+      // Initial state
+      if (navigator.onLine) setOnline()
+      else setOffline()
+    </script>
+  </body>
+</html>

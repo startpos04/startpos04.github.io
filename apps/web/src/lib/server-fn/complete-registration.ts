@@ -86,6 +86,9 @@ const GLOBAL_BUSINESS_CONFIGS: ConfigDefault[] = [
   { key: 'LOCALE', value: 'en-PH' },
   { key: 'CURRENCY', value: 'PHP' },
   { key: 'VAT_RATE', value: '12' },
+  // Refund policy — defaults to unlimited window, no supervisor required
+  { key: 'REFUND_WINDOW_HOURS', value: '-1' },
+  { key: 'REFUND_REQUIRES_SUPERVISOR', value: 'false' },
 ]
 
 const GLOBAL_BRANCH_CONFIGS: ConfigDefault[] = [

@@ -25,7 +25,7 @@ function RouteComponent() {
 
   const TABS = [
     // Branch-level settings
-    { label: 'Entitlements', Component: EntitlementsPage },
+    { label: 'Capabilities', Component: EntitlementsPage },
     { label: 'Compliance', Component: CompliancePage },
     { label: 'Units', Component: UnitsPage },
     { label: 'Categories', Component: CategoriesPage },
@@ -48,7 +48,9 @@ function RouteComponent() {
   ] as const
 
   const VALID_TABS: Set<string> = new Set(TABS.map(t => t.label))
-  const defaultValue = tab && VALID_TABS.has(tab) ? tab : 'Entitlements'
+  // Support old ?tab=Entitlements deep-links by remapping to the new label
+  const normalizedTab = tab === 'Entitlements' ? 'Capabilities' : tab
+  const defaultValue = normalizedTab && VALID_TABS.has(normalizedTab) ? normalizedTab : 'Capabilities'
 
   return <Tab defaultValue={defaultValue} className='grow h-1' tabClass='px-4' tabs={[...TABS]} />
 }

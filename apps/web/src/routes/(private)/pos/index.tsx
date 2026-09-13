@@ -3,7 +3,7 @@ import Loading from '@platform/components/custom/loading'
 import { AlertPrompt } from '@platform/components/custom/prompt/alert-prompt'
 import { SuccessPrompt } from '@platform/components/custom/prompt/success-prompt'
 import { ThemeToggle } from '@platform/components/custom/theme/theme-toggle'
-import { sequenceCounterCollection } from '@platform/db/collections'
+import { capabilityConfigurationCollection, sequenceCounterCollection } from '@platform/db/collections'
 import { useAppForm } from '@platform/hooks/form'
 import { useBarcodeScanner } from '@platform/hooks/use-barcode-scanner'
 import { useCapability } from '@platform/hooks/use-capability'
@@ -11,7 +11,7 @@ import { useIsMobile } from '@platform/hooks/use-mobile'
 import { Capabilities } from '@platform/lib/entitlement/capability-keys'
 import MountManager from '@platform/lib/mount-manager'
 import { pdf } from '@react-pdf/renderer'
-import { useLiveQuery } from '@tanstack/react-db'
+import { and, eq, useLiveQuery } from '@tanstack/react-db'
 import { formOptions, useStore, uuid } from '@tanstack/react-form'
 import { createFileRoute, useNavigate, useSearch } from '@tanstack/react-router'
 import { type Order, Role, SessionStatus } from 'prisma/generated/prisma/browser'
@@ -82,6 +82,36 @@ function POSPage() {
 
   useLiveQuery(q => q.from({ sequence: sequenceCounterCollection }))
 
+  // ---------------------------------------------------------------------------
+  // Hardware settings — read from capabilityConfigurationCollection (offline-capable,
+  // eagerly synced on login). Each key is independent; missing row = default off.
+  // ---------------------------------------------------------------------------
+  const barcodeConfig = useLiveQuery(
+    q =>
+      q
+        .from({ cfg: capabilityConfigurationCollection })
+        .where(({ cfg }) =>
+          and(eq(cfg.capabilityId, 'COMPLETE_CHECKOUT'), eq(cfg.key, 'barcode_scanner_enabled'), eq(cfg.branchId as unknown as string, user.branch.id)),
+        )
+        .select(({ cfg }) => ({ value: cfg.value })),
+    [user.branch.id],
+  )
+  // Default off when no setting row exists
+  const barcodeEnabled = barcodeConfig.data?.[0]?.value === 'true'
+
+  const cashDrawerConfig = useLiveQuery(
+    q =>
+      q
+        .from({ cfg: capabilityConfigurationCollection })
+        .where(({ cfg }) =>
+          and(eq(cfg.capabilityId, 'COMPLETE_CHECKOUT'), eq(cfg.key, 'cash_drawer_enabled'), eq(cfg.branchId as unknown as string, user.branch.id)),
+        )
+        .select(({ cfg }) => ({ value: cfg.value })),
+    [user.branch.id],
+  )
+  // Default off when no setting row exists
+  const cashDrawerEnabled = cashDrawerConfig.data?.[0]?.value === 'true'
+
   const handleConfirm = async (
     value: typeof posFormOpts.defaultValues,
     compliance?: { scPwdName?: string; scPwdIdNumber?: number; scPwdDiscount?: number },
@@ -147,9 +177,10 @@ function POSPage() {
     form.reset()
     navigate({ to: '.', search: (prev: Record<string, unknown>) => ({ ...prev, orderId: undefined }), replace: true })
 
-    // Open cash drawer if payment includes cash and Bluetooth printer is connected
+    // Open cash drawer if payment includes cash, cash drawer is enabled in settings,
+    // and a Bluetooth printer is connected
     const hasCashPayment = value.payments.some(p => p.method === 'CASH')
-    if (hasCashPayment) {
+    if (hasCashPayment && cashDrawerEnabled) {
       const printer = getBluetoothPrinter()
       if (printer.isConnected()) {
         try {
@@ -272,7 +303,6 @@ function POSPage() {
     },
   })
 
-  // Barcode scanner integration
   const cartItems = useStore(form.store, s => s.values.items)
 
   // Get order items for stock calculation
@@ -360,7 +390,7 @@ function POSPage() {
   }
 
   const { isScanning } = useBarcodeScanner({
-    enabled: true,
+    enabled: barcodeEnabled,
     onScan: handleBarcodeScanned,
     onError: error => {
       toast.error('Scan error', {
@@ -419,7 +449,7 @@ function POSPage() {
         ) : (
           <ProductItems form={form} />
         )}
-        <CartAside form={form} />
+        <CartAside form={form} cashDrawerEnabled={cashDrawerEnabled} barcodeEnabled={barcodeEnabled} canPrintReceipt={canPrintReceipt} />
       </div>
     </div>
   )

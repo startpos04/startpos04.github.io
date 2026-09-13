@@ -16,7 +16,6 @@ import { createFileRoute } from '@tanstack/react-router'
 import { z } from 'zod'
 import { InvoicesTab } from './-invoices-tab'
 import { OverviewTab } from './-overview-tab'
-import { PaymentMethodsTab } from './-payment-methods-tab'
 
 const searchSchema = z.object({
   tab: z.string().optional(),
@@ -37,7 +36,6 @@ function SubscriptionDashboard() {
   const TABS = [
     { label: 'Overview', Component: OverviewTab },
     { label: 'Invoices', Component: InvoicesTab },
-    { label: 'Payment Methods', Component: PaymentMethodsTab },
   ] as const
 
   const VALID_TABS: Set<string> = new Set(TABS.map(t => t.label))

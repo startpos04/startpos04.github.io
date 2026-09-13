@@ -9,19 +9,34 @@ import { PriceEngine } from '@/lib/conversion/price-engine'
 
 export const invoiceCols = {
   invoiceNumber: (h: ColumnHelper<any>) =>
-    h.accessor('number', {
-      header: 'Invoice Number',
-      cell: info => <span className='font-medium text-sm'>{info.getValue()}</span>,
+    h.accessor('externalInvoiceId', {
+      header: 'Invoice #',
+      cell: info => {
+        const id = info.getValue()
+        // Show the Stripe invoice ID if available, otherwise fall back to the row id
+        const label = id ?? `INV-${info.row.original.id.slice(-6).toUpperCase()}`
+        return <span className='font-medium text-sm font-mono'>{label}</span>
+      },
     }),
 
   description: (h: ColumnHelper<any>) =>
-    h.accessor('description', {
-      header: 'Description',
-      cell: info => <span className='text-sm text-muted-foreground'>{info.getValue()}</span>,
+    h.display({
+      id: 'description',
+      header: 'Period',
+      cell: ({ row }) => {
+        const start = new Date(row.original.billingPeriodStart)
+        const end = new Date(row.original.billingPeriodEnd)
+        const fmt = (d: Date) => d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+        return (
+          <span className='text-sm text-muted-foreground'>
+            {fmt(start)} – {fmt(end)}
+          </span>
+        )
+      },
     }),
 
   invoiceDate: (h: ColumnHelper<any>) =>
-    h.accessor('date', {
+    h.accessor('billingPeriodStart', {
       header: 'Date',
       cell: info => {
         const date = new Date(info.getValue())
@@ -38,10 +53,12 @@ export const invoiceCols = {
     }),
 
   dueDate: (h: ColumnHelper<any>) =>
-    h.accessor('dueDate', {
+    h.accessor('dueAt', {
       header: 'Due Date',
       cell: info => {
-        const date = new Date(info.getValue())
+        const val = info.getValue()
+        if (!val) return <span className='text-sm text-muted-foreground'>—</span>
+        const date = new Date(val)
         return (
           <span className='text-sm'>
             {date.toLocaleDateString('en-US', {
@@ -58,12 +75,14 @@ export const invoiceCols = {
     h.accessor('status', {
       header: 'Status',
       cell: info => {
-        const status = info.getValue()
+        const status = info.getValue() as string
+        const isPaid = status === 'PAID'
+        const isOpen = status === 'OPEN' || status === 'DRAFT'
         return (
           <div className='flex items-center gap-2'>
-            <div className={cn('w-2 h-2 rounded-full', status === 'paid' ? 'bg-emerald-500' : status === 'pending' ? 'bg-amber-500' : 'bg-red-500')} />
-            <Badge variant={status === 'paid' ? 'default' : status === 'pending' ? 'secondary' : 'destructive'} className='text-xs capitalize'>
-              {status}
+            <div className={cn('w-2 h-2 rounded-full', isPaid ? 'bg-emerald-500' : isOpen ? 'bg-amber-500' : 'bg-red-500')} />
+            <Badge variant={isPaid ? 'default' : isOpen ? 'secondary' : 'destructive'} className='text-xs capitalize'>
+              {status.charAt(0) + status.slice(1).toLowerCase()}
             </Badge>
           </div>
         )
@@ -71,7 +90,7 @@ export const invoiceCols = {
     }),
 
   invoiceAmount: (h: ColumnHelper<any>) =>
-    h.accessor('amount', {
+    h.accessor('totalAmount', {
       header: 'Amount',
       cell: info => {
         const amount = info.getValue()
@@ -87,13 +106,16 @@ export const invoiceCols = {
     h.display({
       id: 'actions',
       header: 'Actions',
-      cell: () => (
-        <div className='text-right'>
-          <Button variant='ghost' size='sm' className='h-7 px-2 text-xs'>
-            Download
-          </Button>
-        </div>
-      ),
+      cell: ({ row }) => {
+        const url = row.original.hostedInvoiceUrl ?? row.original.pdfUrl
+        return (
+          <div className='text-right'>
+            <Button variant='ghost' size='sm' className='h-7 px-2 text-xs' disabled={!url} onClick={() => url && window.open(url, '_blank')}>
+              {url ? 'View' : '—'}
+            </Button>
+          </div>
+        )
+      },
     }),
 
   // Billing/Credit History specific columns

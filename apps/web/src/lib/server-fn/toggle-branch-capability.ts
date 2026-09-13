@@ -4,11 +4,9 @@
  * This allows branch managers to control which capabilities are active for their
  * specific branch, independent of other branches in the business.
  *
- * The implementation uses BusinessConfiguration entries with keys like:
- *   ENABLE_CREATE_ORDER = "true" | "false"
- *
- * These are read by the EntitlementEngine and added to branchDisabledFeatures
- * when set to "false".
+ * Accepted keys:
+ *   - Any valid CapabilityKey from the Capabilities enum
+ *   - QUICK_ADD_PRODUCT — a branch-only UI feature flag (not a subscription capability)
  */
 
 import { Permissions } from '@platform/lib/authorization/permission-keys'
@@ -21,27 +19,26 @@ import { authMiddleware } from '@/lib/better-auth/auth-middleware'
 import { getTenantContext, requireTenantContext } from '@/lib/better-auth/server-context'
 
 // ---------------------------------------------------------------------------
+// Extra branch-only config keys that are not subscription capabilities
+// ---------------------------------------------------------------------------
+
+const BRANCH_UI_CONFIG_KEYS = new Set(['QUICK_ADD_PRODUCT'])
+
+// ---------------------------------------------------------------------------
 // Input validation
 // ---------------------------------------------------------------------------
 
 const ToggleBranchCapabilitySchema = z.object({
-  capabilityKey: z.string().refine((val): val is CapabilityKey => {
-    return Object.values(Capabilities).includes(val as CapabilityKey)
-  }, 'Invalid capability key'),
+  capabilityKey: z
+    .string()
+    .refine(
+      (val): val is CapabilityKey | 'QUICK_ADD_PRODUCT' => Object.values(Capabilities).includes(val as CapabilityKey) || BRANCH_UI_CONFIG_KEYS.has(val),
+      'Invalid capability key',
+    ),
   enabled: z.boolean(),
 })
 
 type ToggleBranchCapabilityInput = z.infer<typeof ToggleBranchCapabilitySchema>
-
-// ---------------------------------------------------------------------------
-// Helper: Convert capability key to config key
-// Example: "CREATE_ORDER" → "ENABLE_CREATE_ORDER"
-// ---------------------------------------------------------------------------
-
-// biome-ignore lint/correctness/noUnusedVariables: kept for future config key helper
-function _getConfigKey(capabilityKey: CapabilityKey): string {
-  return `ENABLE_${capabilityKey}`
-}
 
 // ---------------------------------------------------------------------------
 // Server function

@@ -1,3 +1,4 @@
+import { DevTools } from '@platform/components/custom/dev-tools'
 import { NavigationProgress } from '@platform/components/custom/navigation-progress'
 import { ThemeProvider } from '@platform/components/custom/theme/theme-provider'
 import { useSw } from '@platform/hooks/use-sw'
@@ -20,7 +21,7 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
   head: () => ({
     meta: [{ charSet: 'utf-8' }, { name: 'viewport', content: 'width=device-width, initial-scale=1' }, { title: `${APP_NAME} Admin Panel` }],
     links: [
-      { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' },
+      { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' },
       { rel: 'stylesheet', href: appCss },
       { rel: 'manifest', href: '/manifest.json' },
       { rel: 'apple-touch-icon', href: '/logo192.png' },
@@ -83,6 +84,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
           <MountManager />
           {children}
           <Toaster theme='system' richColors closeButton position='top-right' />
+          <DevTools />
           <Scripts />
         </ThemeProvider>
       </body>

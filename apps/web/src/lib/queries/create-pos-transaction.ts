@@ -310,7 +310,7 @@ export const createPosTransaction = async (data: CreateSaleInput, posOrders: pos
     // Pattern mirrors InventoryEngine: read from collection → engine call → write to collection.
 
     const businessId = user.business.id
-    const subscription = authStore.state.user?.entitlement
+    const subscription = getAuthenticatedUser().entitlement
 
     // Locate the open counter for the current period from the offline collection.
     // Match on businessId; closed counters are filtered out.

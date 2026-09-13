@@ -12,14 +12,45 @@ import { requirePermission } from '@platform/lib/better-auth/permission-middlewa
 import type { CapabilityKey } from '@platform/lib/entitlement/capability-keys'
 import { prisma as rootPrisma } from '@platform/lib/prisma-client'
 import { createServerFn } from '@tanstack/react-start'
+import type { ConfigurationKey } from 'prisma/generated/prisma/enums'
 import { authMiddleware } from '@/lib/better-auth/auth-middleware'
 import { getTenantContext, requireTenantContext } from '@/lib/better-auth/server-context'
 import { CAPABILITY_REGISTRY } from '../onboarding/capability-registry'
 import { CATEGORY_LABELS, CATEGORY_ORDER } from '../tutorial/feature-library'
+import { HARDWARE_CONFIG_KEYS, HARDWARE_CONFIG_META } from './fetch-hardware-capability-config'
+
+// ---------------------------------------------------------------------------
+// Static map: which Configuration keys belong to each capability
+// Only include configs that are genuinely owned by the capability —
+// shared compliance settings (VAT, price display) live in the Compliance tab.
+// ---------------------------------------------------------------------------
+
+const CAPABILITY_CONFIG_KEYS: Partial<Record<string, ConfigurationKey[]>> = {
+  MANAGE_INVENTORY: ['LOW_STOCK_THRESHOLD', 'BUFFER_RATE', 'AUTO_APPROVE_LOW_STOCK_REFILL'],
+  VIEW_TRANSACTION_HISTORY: ['REFUND_WINDOW_HOURS', 'REFUND_REQUIRES_SUPERVISOR'],
+} satisfies Partial<Record<string, ConfigurationKey[]>>
 
 // ---------------------------------------------------------------------------
 // Output types
 // ---------------------------------------------------------------------------
+
+/**
+ * A resolved Configuration row for this capability, enriched with definition metadata.
+ * The actual value stored in the Configuration table, or the definition's defaultValue
+ * if no business/branch-specific row exists.
+ */
+export type CapabilityConfigRow = {
+  key: string // ConfigurationKey, e.g. "LOW_STOCK_THRESHOLD"
+  label: string // Human-readable label from ConfigurationDefinition
+  description: string | null // Help text
+  value: string // Current value (business/branch override or default)
+  defaultValue: string // Platform default for comparison
+  dataType: string // "BOOLEAN" | "STRING" | "NUMBER" | "JSON" | "ENUM"
+  scope: string // "BRANCH" | "BUSINESS" — where this value is set
+  isOverridden: boolean // true when the business/branch has a custom value
+  /** If true this row lives in capability_configurations, not configurations */
+  isHardwareConfig?: boolean
+}
 
 export type EntitlementDetail = {
   capabilityKey: CapabilityKey
@@ -36,6 +67,9 @@ export type EntitlementDetail = {
   // Capability state
   isEnabled: boolean // Whether the capability is active for this business
   isEnabledAtBranch: boolean // Whether the capability is enabled at THIS branch
+
+  // Per-capability configuration rows (from CapabilityConfiguration table)
+  configs: CapabilityConfigRow[]
 
   // Override info
   hasOverride: boolean
@@ -73,14 +107,6 @@ const BUSINESS_LEVEL_CAPABILITIES = new Set([
   'BUSINESS_VIEW_ANALYTICS', // Business-wide analytics
   'EXPORT_DATA', // Business-wide data export
 ])
-
-/**
- * Helper: Convert capability key to config key
- * Example: "CREATE_ORDER" → "ENABLE_CREATE_ORDER"
- */
-function _getConfigKey(capabilityKey: CapabilityKey): string {
-  return `ENABLE_${capabilityKey}`
-}
 
 export const fetchEntitlementDetails = createServerFn({ method: 'GET' })
   .middleware([authMiddleware, requirePermission(Permissions.BRANCH_VIEW_SETTINGS), requireTenantContext()])
@@ -169,6 +195,94 @@ export const fetchEntitlementDetails = createServerFn({ method: 'GET' })
         branchEnabledMap.set(config.capabilityId, config.enabled)
       }
 
+      console.log('[fetchEntitlementDetails] Step 4b: Fetching Configuration rows for capability config display...')
+      // Collect all ConfigurationKeys needed across all capabilities shown
+      const allConfigKeys = Array.from(new Set(Object.values(CAPABILITY_CONFIG_KEYS).flat()))
+
+      // Fetch definitions for all relevant keys (label, description, dataType, defaultValue)
+      const definitions = await rootPrisma.configurationDefinition.findMany({
+        where: { key: { in: allConfigKeys as ConfigurationKey[] } },
+        select: { key: true, label: true, description: true, dataType: true, defaultValue: true, scope: true },
+      })
+      const defMap = new Map(definitions.map(d => [d.key as string, d]))
+
+      // Fetch the actual business/branch-scoped Configuration rows
+      const configRows = await rootPrisma.configuration.findMany({
+        where: {
+          key: { in: allConfigKeys as ConfigurationKey[] },
+          OR: [
+            { businessId, scope: 'BUSINESS' },
+            { branchId, scope: 'BRANCH' },
+          ],
+        },
+        select: { key: true, value: true, scope: true },
+      })
+
+      // Build key → most-specific value map (BRANCH wins over BUSINESS)
+      const valueMap = new Map<string, { value: string; scope: string }>()
+      for (const row of configRows) {
+        const existing = valueMap.get(row.key as string)
+        if (!existing || row.scope === 'BRANCH') {
+          valueMap.set(row.key as string, { value: row.value, scope: row.scope })
+        }
+      }
+
+      // Build the per-capability config rows map
+      const capabilityConfigMap = new Map<string, CapabilityConfigRow[]>()
+      for (const [capabilityId, keys] of Object.entries(CAPABILITY_CONFIG_KEYS)) {
+        if (!keys) continue
+        const rows: CapabilityConfigRow[] = []
+        for (const key of keys) {
+          const def = defMap.get(key as string)
+          if (!def) continue
+          const current = valueMap.get(key as string)
+          rows.push({
+            key: key as string,
+            label: def.label,
+            description: def.description ?? null,
+            value: current?.value ?? def.defaultValue,
+            defaultValue: def.defaultValue,
+            dataType: def.dataType,
+            scope: current?.scope ?? def.scope,
+            isOverridden: !!current,
+          })
+        }
+        if (rows.length > 0) capabilityConfigMap.set(capabilityId, rows)
+      }
+
+      console.log('[fetchEntitlementDetails] Step 4c: Fetching COMPLETE_CHECKOUT hardware configs...')
+      // Fetch CapabilityConfiguration rows for COMPLETE_CHECKOUT hardware settings.
+      // These live in capability_configurations (not configurations) and are always BRANCH-scoped.
+      const hardwareConfigRows = await rootPrisma.capabilityConfiguration.findMany({
+        where: { capabilityId: 'COMPLETE_CHECKOUT', branchId, scope: 'BRANCH' },
+        select: { key: true, value: true },
+      })
+      const hardwareValueMap = new Map(hardwareConfigRows.map(r => [r.key, r.value]))
+
+      // Build COMPLETE_CHECKOUT hardware config rows and merge into capabilityConfigMap.
+      // Each hardware key (barcode_scanner_enabled, cash_drawer_enabled) becomes its own
+      // CapabilityConfigRow with isHardwareConfig = true so the UI knows to call the
+      // updateHardwareCapabilityConfig server fn instead of updateCapabilityConfig.
+      const hardwareRows: CapabilityConfigRow[] = Object.values(HARDWARE_CONFIG_KEYS).map(key => {
+        const meta = HARDWARE_CONFIG_META[key]
+        const rawValue = hardwareValueMap.get(key)
+        return {
+          key,
+          label: meta.label,
+          description: meta.description,
+          value: rawValue ?? String(meta.defaultValue),
+          defaultValue: String(meta.defaultValue),
+          dataType: 'BOOLEAN',
+          scope: 'BRANCH',
+          isOverridden: rawValue !== undefined,
+          isHardwareConfig: true,
+        }
+      })
+
+      // Merge: hardware rows are appended after any existing Configuration rows for this capability
+      const existingCheckoutConfigs = capabilityConfigMap.get('COMPLETE_CHECKOUT') ?? []
+      capabilityConfigMap.set('COMPLETE_CHECKOUT', [...existingCheckoutConfigs, ...hardwareRows])
+
       console.log('[fetchEntitlementDetails] Step 5: Fetching overrides...')
       // Fetch entitlement overrides
       const overrides = await rootPrisma.entitlementOverride.findMany({
@@ -256,6 +370,7 @@ export const fetchEntitlementDetails = createServerFn({ method: 'GET' })
             currentUsage: usageCounts[ent.featureKey] ?? null,
             isEnabled,
             isEnabledAtBranch,
+            configs: capabilityConfigMap.get(capabilityKey) ?? [],
             hasOverride: !!override,
             overrideGranted: override?.granted ?? null,
             overrideExpiresAt: override?.expiresAt ?? null,
@@ -280,7 +395,7 @@ export const fetchEntitlementDetails = createServerFn({ method: 'GET' })
         if (!categoryEntitlements || categoryEntitlements.length === 0) return null
 
         return {
-          category,
+          category: category as string,
           categoryLabel: CATEGORY_LABELS[category] ?? category,
           isOperational: categoryEntitlements.some(e => e.isOperational),
           entitlements: categoryEntitlements,

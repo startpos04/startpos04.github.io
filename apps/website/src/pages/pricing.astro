@@ -1,9 +1,9 @@
 ---
-import BaseLayout from '../layouts/BaseLayout.astro'
-import PlanCard from '../components/ui/PlanCard.astro'
-import Accordion from '../components/ui/Accordion.astro'
 import FinalCTA from '../components/sections/FinalCTA.astro'
-import { PLANS, ADDONS, FAQS, APP_URL } from '../constants'
+import Accordion from '../components/ui/Accordion.astro'
+import PlanCard from '../components/ui/PlanCard.astro'
+import { ADDONS, APP_URL, FAQS, PLANS } from '../constants'
+import BaseLayout from '../layouts/BaseLayout.astro'
 ---
 
 <BaseLayout
@@ -137,7 +137,7 @@ import { PLANS, ADDONS, FAQS, APP_URL } from '../constants'
   </section>
 
   <!-- FAQ -->
-  <section class="py-16 bg-white">
+  <section id="faq" class="py-16 bg-white">
     <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="text-center mb-10">
         <h2 class="text-2xl font-black text-slate-900 mb-2">Frequently asked questions</h2>

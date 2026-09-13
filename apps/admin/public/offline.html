@@ -3,132 +3,266 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>You're offline</title>
+    <title>Admin Panel — Connection required</title>
     <style>
       :root {
         color-scheme: light dark;
+        --bg: #0a0a0a;
+        --bg2: #111113;
+        --fg: #f4f4f5;
+        --muted: #a1a1aa;
+        --muted2: #71717a;
+        --border: #27272a;
+        --primary: #10b981;
+        --primary-dim: rgba(16, 185, 129, 0.12);
+        --danger: #ef4444;
+        --danger-dim: rgba(239, 68, 68, 0.1);
+        --radius: 12px;
       }
-      * {
-        box-sizing: border-box;
+      @media (prefers-color-scheme: light) {
+        :root {
+          --bg: #f9fafb;
+          --bg2: #ffffff;
+          --fg: #111827;
+          --muted: #6b7280;
+          --muted2: #9ca3af;
+          --border: #e5e7eb;
+          --primary-dim: rgba(16, 185, 129, 0.1);
+          --danger-dim: rgba(239, 68, 68, 0.08);
+        }
       }
-      html,
-      body {
-        height: 100%;
-        margin: 0;
-      }
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      html, body { height: 100%; }
       body {
         display: flex;
         align-items: center;
         justify-content: center;
         padding: 24px;
-        font-family:
-          -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-        background: #0a0a0a;
-        color: #f4f4f5;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        background: var(--bg);
+        color: var(--fg);
       }
+
       .card {
-        max-width: 420px;
+        max-width: 400px;
+        width: 100%;
+        background: var(--bg2);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 36px 28px 28px;
         text-align: center;
       }
-      .icon {
-        width: 56px;
-        height: 56px;
+
+      /* Brand logo + badge */
+      .logo-wrap {
+        position: relative;
+        width: fit-content;
         margin: 0 auto 20px;
-        opacity: 0.8;
       }
-      h1 {
-        font-size: 20px;
-        font-weight: 600;
-        margin: 0 0 8px;
-      }
-      p {
-        font-size: 14px;
-        line-height: 1.5;
-        color: #a1a1aa;
-        margin: 0 0 24px;
-      }
-      #status {
-        display: inline-flex;
+      .logo {
+        width: 48px;
+        height: 48px;
+        background: var(--primary);
+        border-radius: 12px;
+        display: flex;
         align-items: center;
-        gap: 6px;
-        font-size: 12px;
-        color: #a1a1aa;
-        margin-bottom: 20px;
+        justify-content: center;
+        opacity: 0.7;
       }
-      #status .dot {
-        width: 6px;
-        height: 6px;
+      .logo svg { width: 26px; height: 26px; }
+      .no-badge {
+        position: absolute;
+        bottom: -4px;
+        right: -6px;
+        width: 20px;
+        height: 20px;
+        background: var(--danger);
         border-radius: 50%;
-        background: #ef4444;
+        border: 2px solid var(--bg2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
       }
-      button {
+      .no-badge svg { width: 10px; height: 10px; stroke: white; }
+
+      h1 {
+        font-size: 17px;
+        font-weight: 700;
+        margin-bottom: 8px;
+        letter-spacing: -0.01em;
+      }
+      .subtitle {
+        font-size: 13px;
+        line-height: 1.65;
+        color: var(--muted);
+        margin-bottom: 24px;
+      }
+
+      /* Info box */
+      .info-box {
+        background: var(--danger-dim);
+        border: 1px solid rgba(239,68,68,0.2);
+        border-radius: 8px;
+        padding: 12px 14px;
+        text-align: left;
+        margin-bottom: 24px;
+        display: flex;
+        gap: 10px;
+        align-items: flex-start;
+      }
+      .info-box svg {
+        width: 15px;
+        height: 15px;
+        stroke: var(--danger);
+        flex-shrink: 0;
+        margin-top: 1px;
+      }
+      .info-box p {
+        font-size: 12px;
+        line-height: 1.6;
+        color: var(--muted);
+        margin: 0;
+      }
+
+      /* Reload button */
+      .btn {
         appearance: none;
-        border: 1px solid #27272a;
-        background: #18181b;
-        color: #f4f4f5;
-        font-size: 14px;
+        width: 100%;
+        font-size: 13px;
         font-weight: 500;
         padding: 10px 20px;
         border-radius: 8px;
         cursor: pointer;
+        background: var(--primary);
+        color: #fff;
+        border: none;
+        margin-bottom: 16px;
+        transition: opacity 0.15s;
       }
-      button:hover {
-        background: #27272a;
+      .btn:hover { opacity: 0.88; }
+      .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+      /* Status pill */
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 11px;
+        color: var(--muted);
+        background: var(--bg);
+        border: 1px solid var(--border);
+        padding: 4px 10px;
+        border-radius: 99px;
       }
-      button:active {
-        transform: translateY(1px);
+      .dot {
+        width: 5px;
+        height: 5px;
+        border-radius: 50%;
+        background: var(--danger);
+      }
+      .dot.online { background: var(--primary); }
+
+      .detecting {
+        font-size: 11px;
+        color: var(--muted2);
+        margin-top: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+      }
+      .blink {
+        width: 5px;
+        height: 5px;
+        border-radius: 50%;
+        background: var(--primary);
+        animation: blink 1.4s ease-in-out infinite;
+      }
+      @keyframes blink {
+        0%, 100% { opacity: 0.2; }
+        50%       { opacity: 1; }
       }
     </style>
   </head>
   <body>
     <div class="card">
-      <svg
-        class="icon"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="1.5"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-      >
-        <path d="M12 20h.01" />
-        <path d="M8.5 16.5a5 5 0 0 1 7 0" />
-        <path d="M5 12.5a10 10 0 0 1 14 0" />
-        <path d="M1.5 9a15 15 0 0 1 21 0" />
-        <line x1="2" y1="2" x2="22" y2="22" />
-      </svg>
-      <h1>You're offline</h1>
-      <p>
-        We couldn't reach the server and this page hasn't been saved for offline use yet.
-        Check your connection — the app will reload automatically once you're back online.
-      </p>
-      <div id="status">
-        <span class="dot"></span>
-        <span id="status-text">No connection</span>
+      <div class="logo-wrap">
+        <div class="logo">
+          <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M6 5L4 9v14a2 2 0 002 2h20a2 2 0 002-2V9L26 5z" stroke="white" stroke-width="2" stroke-linejoin="round" fill="none"/>
+            <line x1="4" y1="9" x2="28" y2="9" stroke="white" stroke-width="2"/>
+            <path d="M20 13a4 4 0 01-8 0" stroke="white" stroke-width="2" stroke-linecap="round" fill="none"/>
+          </svg>
+        </div>
+        <div class="no-badge">
+          <svg viewBox="0 0 12 12" fill="none" stroke-width="2" stroke-linecap="round">
+            <line x1="2" y1="2" x2="10" y2="10"/>
+            <line x1="10" y1="2" x2="2" y2="10"/>
+          </svg>
+        </div>
       </div>
-      <br />
-      <button onclick="window.location.reload()">Try again</button>
+
+      <h1>Internet connection required</h1>
+      <p class="subtitle">
+        The Admin Panel requires an active connection — it does not operate offline.
+        Please reconnect and reload.
+      </p>
+
+      <div class="info-box">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/>
+          <line x1="12" y1="8" x2="12" y2="12"/>
+          <line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+        <p>Unlike the POS app, the Admin Panel is online-only. All operations — user management, billing, and platform config — require a live server connection.</p>
+      </div>
+
+      <button class="btn" id="reload-btn" onclick="doReload()" disabled>
+        <span id="btn-text">Waiting for connection…</span>
+      </button>
+
+      <div class="pill">
+        <span class="dot" id="dot"></span>
+        <span id="status-text">No internet connection</span>
+      </div>
+
+      <div class="detecting">
+        <span class="blink"></span>
+        <span>Watching for connection…</span>
+      </div>
     </div>
 
     <script>
-      // Auto-reload the moment connectivity returns, and reflect live status
-      // so the user isn't left guessing whether anything is happening.
-      function updateStatus() {
-        var dot = document.querySelector('#status .dot');
-        var text = document.getElementById('status-text');
-        if (navigator.onLine) {
-          dot.style.background = '#22c55e';
-          text.textContent = 'Back online — reloading…';
-          window.location.reload();
-        } else {
-          dot.style.background = '#ef4444';
-          text.textContent = 'No connection';
-        }
+      var btn  = document.getElementById('reload-btn')
+      var text = document.getElementById('btn-text')
+      var dot  = document.getElementById('dot')
+      var status = document.getElementById('status-text')
+
+      function doReload() {
+        text.textContent = 'Loading…'
+        btn.disabled = true
+        window.location.reload()
       }
 
-      window.addEventListener('online', updateStatus);
-      window.addEventListener('offline', updateStatus);
-      updateStatus();
+      function setOnline() {
+        dot.classList.add('online')
+        status.textContent = 'Connected — ready to load'
+        btn.disabled = false
+        text.textContent = 'Reload Admin Panel'
+        setTimeout(doReload, 1200)
+      }
+
+      function setOffline() {
+        dot.classList.remove('online')
+        status.textContent = 'No internet connection'
+        btn.disabled = true
+        text.textContent = 'Waiting for connection…'
+      }
+
+      window.addEventListener('online', setOnline)
+      window.addEventListener('offline', setOffline)
+      if (navigator.onLine) setOnline()
+      else setOffline()
     </script>
   </body>
 </html>

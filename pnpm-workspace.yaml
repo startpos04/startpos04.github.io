@@ -5,6 +5,19 @@ packages:
 overrides:
   '@types/pg': '8.11.11'
   '@tanstack/db': '0.6.5'
+  # Force a single React instance across the entire monorepo.
+  # Without this, pnpm creates separate node_modules/react junctions under
+  # packages/platform and each app. Vite 7 / Rolldown can treat these junction
+  # paths as different module IDs even though they resolve to the same .pnpm
+  # singleton — producing two React instances and "Invalid hook call" errors.
+  'react': '19.2.4'
+  'react-dom': '19.2.4'
+  # Dedupe the TanStack React packages that use React context internally
+  # so that useStore / useQuery / useRouter all share the same context tree.
+  '@tanstack/react-router': '1.168.10'
+  '@tanstack/react-store': '0.9.3'
+  '@tanstack/react-query': '5.96.0'
+  '@tanstack/react-db': '0.1.83'
 
 allowBuilds:
   '@journeyapps/wa-sqlite': true

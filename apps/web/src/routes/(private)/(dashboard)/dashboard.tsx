@@ -65,6 +65,10 @@ function DashboardPage() {
     queryKey: ['capability-states'],
     queryFn: () => fetchCapabilityStates(),
     staleTime: 60_000,
+    // capability states require a server call — disable when offline so React
+    // Query doesn't queue a failing request and the component renders from the
+    // last cached value (or empty array) instead.
+    enabled: isOnline,
   })
 
   // Safety check: don't render if user is null (during logout)

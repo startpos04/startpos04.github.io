@@ -1,256 +1,506 @@
----
-import BaseLayout from '../layouts/BaseLayout.astro'
+﻿---
 import FinalCTA from '../components/sections/FinalCTA.astro'
 import { APP_URL } from '../constants'
+import BaseLayout from '../layouts/BaseLayout.astro'
 
-const modules = [
+// ---------------------------------------------------------------------------
+// Feature modules — grounded in capability-registry.ts + feature-library.ts
+// Each module maps to one or more capability keys and provides the full
+// marketing copy for the public-facing features page.
+// ---------------------------------------------------------------------------
+
+interface FeatureModule {
+  id: string
+  icon: string
+  title: string
+  tagline: string
+  description: string
+  plan: string
+  planVariant: 'emerald' | 'violet' | 'blue' | 'orange'
+  bullets: string[]
+  capabilities: string[] // capability key names for context
+  comingSoon?: boolean
+}
+
+const MODULES: FeatureModule[] = [
+  // -- POS Checkout (COMPLETE_CHECKOUT, RECORD_PAYMENT, ISSUE_REFUND) --------
   {
     id: 'pos',
     icon: '🛒',
     title: 'POS Checkout',
     plan: 'All plans',
-    planVariant: 'emerald' as const,
-    description: 'A fast, full-featured checkout experience built for high-volume retail, restaurant, and grocery environments.',
-    features: [
-      'Multiple payment methods: cash, card, e-wallet, mixed',
-      'Automatic VAT/GST calculation (inclusive and exclusive)',
-      'Discounts — percentage and fixed amount',
-      'Refunds and order adjustments',
-      'BIR-compliant receipt numbering and printing',
-      'PDF receipt generation and download',
-      'Customer reference on transactions',
-      'Cash denomination breakdown for cashiers',
+    planVariant: 'emerald',
+    tagline: 'Ring up a sale in under 10 seconds.',
+    description:
+      'A fast, full-featured checkout experience built for high-volume retail, restaurant, and grocery environments. Start POS handles the transaction so your staff can focus on the customer.',
+    bullets: [
+      'Multiple payment methods — cash, card, e-wallet, or split across any combination',
+      'Automatic VAT/GST calculation (inclusive and exclusive modes)',
+      'Percentage and fixed-amount discounts applied at line-item or cart level',
+      'Refunds and order adjustments with full audit trail',
+      'BIR-compliant sequential receipt numbering and official receipt printing',
+      'PDF receipt generation and one-click download',
+      'Customer reference attached to any transaction',
+      'Cash denomination breakdown screen for cashier handoffs',
     ],
-    screenshot: '[Screenshot: POS checkout screen with product grid and cart]',
+    capabilities: ['COMPLETE_CHECKOUT', 'RECORD_PAYMENT', 'ISSUE_REFUND'],
   },
-  {
-    id: 'catalogue',
-    icon: '🏷️',
-    title: 'Product Catalogue',
-    plan: 'All plans',
-    planVariant: 'emerald' as const,
-    description: 'Manage every type of product your business sells — from simple items to complex bundles with variants and add-ons.',
-    features: [
-      'Physical goods, services, raw materials, and bundles',
-      'Product variants with individual pricing and SKUs',
-      'Product images and descriptions',
-      'Multiple units of measure',
-      'Cost price and selling price per variant',
-      'Product components (Bill of Materials)',
-      'Add-ons and modifiers for restaurant orders',
-      'Expiration date tracking per batch',
-    ],
-    screenshot: '[Screenshot: Product catalogue management with variants]',
-  },
-  {
-    id: 'inventory',
-    icon: '📦',
-    title: 'Inventory Management',
-    plan: 'Premium+',
-    planVariant: 'violet' as const,
-    description: 'Full visibility into your stock — across every location, every batch, every day.',
-    features: [
-      'Multi-location inventory with branch-level stock',
-      'Batch and lot tracking',
-      'Expiry date monitoring with alerts',
-      'Manual stock adjustments with reason codes',
-      'Internal stock transfers between branches',
-      'External transfers for returns and deliveries',
-      'Waste and spoilage recording',
-      'Low-stock threshold alerts and auto-refill tasks',
-    ],
-    screenshot: '[Screenshot: Inventory management dashboard with stock levels]',
-  },
-  {
-    id: 'purchasing',
-    icon: '🚚',
-    title: 'Purchasing',
-    plan: 'Enterprise+',
-    planVariant: 'blue' as const,
-    description: 'Close the loop between what you sell and what you buy. Track every purchase order from request to shelf.',
-    features: [
-      'Supplier directory with contact details',
-      'Purchase order creation and approval workflow',
-      'Line-item detail with expected costs',
-      'Stock receiving against purchase orders',
-      'Cost price updates on receiving',
-      'Purchase history per supplier',
-      'Delivery variance tracking',
-    ],
-    screenshot: '[Screenshot: Purchase order creation and receiving workflow]',
-  },
+
+  // -- Order Queue (CREATE_ORDER) ---------------------------------------------
   {
     id: 'orders',
-    icon: '🍽',
-    title: 'Orders & Kitchen Flow',
-    plan: 'All plans',
-    planVariant: 'emerald' as const,
-    description: 'Purpose-built for restaurants — from the order taker to the kitchen to the customer.',
-    features: [
-      'Order queue with real-time status updates',
-      'Kitchen display system integration',
-      'Dine-in, take-out, and delivery order types',
-      'Table number and buzzer reference',
-      'Add-ons and modifiers per order item',
-      'Order status: pending → in progress → ready → served',
-      'Deposit and partial payment tracking',
-      'Order history and audit trail',
+    icon: '🧾',
+    title: 'Order Queue',
+    plan: 'Basic+',
+    planVariant: 'emerald',
+    tagline: "Take the order first. Collect payment when they're ready.",
+    description:
+      'Perfect for restaurants, cafés, and service businesses. Create a kitchen or service order before collecting payment, then close it out at any time — with the full order history always visible.',
+    bullets: [
+      'Send orders to the queue without charging the customer immediately',
+      'Dine-in, take-out, and delivery order types with table / buzzer reference',
+      'Add-ons and modifiers per line item (extra cheese, no onions)',
+      'Order status flow: pending ? in-progress ? ready ? served',
+      'Deposit and partial payment tracking across order lifecycle',
+      'Full order history with search and status filter',
+      'Seamlessly converts to a transaction when the customer pays',
     ],
-    screenshot: '[Screenshot: Order queue and kitchen display screen]',
+    capabilities: ['CREATE_ORDER', 'VIEW_ORDER_HISTORY'],
   },
+
+  // -- Product Catalogue (MANAGE_PRODUCTS) -----------------------------------
+  {
+    id: 'catalogue',
+    icon: '📦',
+    title: 'Product Catalogue',
+    plan: 'All plans',
+    planVariant: 'emerald',
+    tagline: 'Every product your business sells — organised and ready.',
+    description:
+      'Manage every type of product: physical goods, services, raw materials, and bundles. From a single SKU to a product with a dozen variants, the catalogue handles it all.',
+    bullets: [
+      'Physical goods, services, raw materials, and composite bundles',
+      'Product variants with individual pricing and SKUs (size, colour, flavour)',
+      'Product images and searchable descriptions',
+      'Multiple units of measure (kg, pc, litre, box)',
+      'Cost price and selling price tracked per variant',
+      'Bill of Materials — define components for manufactured goods',
+      'Add-ons and modifiers for restaurant-style customisation',
+      'Expiration date tracking per incoming batch',
+    ],
+    capabilities: ['MANAGE_PRODUCTS'],
+  },
+
+  // -- Receipt Printing (PRINT_RECEIPT) --------------------------------------
+  {
+    id: 'receipts',
+    icon: '🧾',
+    title: 'Receipts & Compliance',
+    plan: 'All plans',
+    planVariant: 'emerald',
+    tagline: 'BIR-ready receipts, printed or emailed in seconds.',
+    description:
+      'Start POS is built around Philippines BIR requirements — sequential invoice numbering, VAT computation, and official receipt formatting — with a framework ready for Singapore and Malaysia.',
+    bullets: [
+      'BIR PTU and TIN number registration in your receipt header',
+      'Sequential invoice numbering per BIR rules',
+      'VAT-inclusive and VAT-exclusive price display modes',
+      'Tax categories: standard, reduced, exempt, zero-rated',
+      'Sales Tax and VAT computation modes',
+      'Thermal receipt printer support and PDF download',
+      'Senior Citizen and PWD discount lines on receipt',
+      'GST-ready architecture for Singapore and Malaysia',
+    ],
+    capabilities: ['PRINT_RECEIPT'],
+  },
+
+  // -- Cash Reconciliation (START_VENDOR_SESSION) ----------------------------
+  {
+    id: 'cash',
+    icon: '💵',
+    title: 'Cash Reconciliation',
+    plan: 'Premium+',
+    planVariant: 'violet',
+    tagline: 'Know exactly how much cash your team collected — every shift.',
+    description:
+      'Open a shift at the start of the day, close it at the end, and see the exact variance between system sales and physical cash. No more guessing — no more manual reconciliation in spreadsheets.',
+    bullets: [
+      'Open and close shift sessions per cashier per day',
+      'Opening cash declaration before the first sale',
+      'Closing count with denomination-by-denomination breakdown',
+      'System-calculated expected cash vs actual cash counted',
+      'Variance report with reason code for discrepancies',
+      'Shift history per employee — who opened, who closed, what was the variance',
+      'Integrates with Task Management for cash handoff workflows',
+    ],
+    capabilities: ['START_VENDOR_SESSION'],
+  },
+
+  // -- Inventory Management (MANAGE_INVENTORY, VIEW_INVENTORY_REPORTS) -------
+  {
+    id: 'inventory',
+    icon: '📊',
+    title: 'Inventory Management',
+    plan: 'Premium+',
+    planVariant: 'violet',
+    tagline: 'Always know your stock — before you run out.',
+    description: 'Full visibility into your stock across every location, every batch, every day. Get alerts before you run out, not after.',
+    bullets: [
+      'Per-branch stock tracking — each location has its own inventory',
+      'Batch and lot tracking with expiry date monitoring',
+      'Manual stock adjustments with reason codes (damage, recount, spoilage)',
+      'Internal stock transfers between branches',
+      'External transfers for returns and inter-company movements',
+      'Low-stock threshold alerts and auto-generated refill tasks',
+      'Waste and spoilage recording with cost impact',
+      'Stock valuation and movement reports',
+    ],
+    capabilities: ['MANAGE_INVENTORY', 'VIEW_INVENTORY_REPORTS'],
+  },
+
+  // -- Batch Preparation (BATCH_PREPARATION) ---------------------------------
+  {
+    id: 'batch',
+    icon: '🍳',
+    title: 'Batch Preparation',
+    plan: 'Premium+',
+    planVariant: 'violet',
+    tagline: 'Prep in batches. Track shelf life. Reduce waste.',
+    description:
+      'Built for food businesses that prepare products ahead of sale — sandwiches, pastries, meal kits, sauces, and anything with a recipe. Deducts raw material usage and tracks finished goods inventory automatically.',
+    bullets: [
+      'Define recipes with Bill of Materials linking to raw ingredients',
+      'Record a production run — system deducts raw materials automatically',
+      'Track finished goods inventory separately from raw inputs',
+      'Shelf-life and expiry date per production batch',
+      'Waste recording when batches expire unsold',
+      'Production cost calculation based on ingredient costs',
+      'Production history and yield reporting',
+    ],
+    capabilities: ['BATCH_PREPARATION'],
+  },
+
+  // -- Purchasing (CREATE_PURCHASE, MANAGE_SUPPLIERS) ------------------------
+  {
+    id: 'purchasing',
+    icon: '🛍️',
+    title: 'Purchasing & Suppliers',
+    plan: 'Enterprise+',
+    planVariant: 'blue',
+    tagline: 'Close the loop between what you sell and what you buy.',
+    description:
+      "Track every purchase order from request to shelf. Know exactly what you ordered, what arrived, and what it cost — and close the gap when deliveries don't match.",
+    bullets: [
+      'Supplier directory with contacts and payment terms',
+      'Purchase order creation with line-item detail and expected costs',
+      'Approval workflow before orders are sent to suppliers',
+      'Stock receiving against purchase orders — quantities and prices',
+      'Delivery variance tracking (ordered vs received)',
+      'Cost price updates on goods receipt — costing stays accurate',
+      'Purchase history per supplier with spend analysis',
+      'Integrates with inventory to update stock levels on receipt',
+    ],
+    capabilities: ['CREATE_PURCHASE', 'MANAGE_SUPPLIERS'],
+  },
+
+  // -- Task Management (CREATE_TASK) ------------------------------------------
   {
     id: 'tasks',
-    icon: '📋',
+    icon: '✅',
     title: 'Task Management',
     plan: 'Enterprise+',
-    planVariant: 'blue' as const,
-    description: 'Structured operational workflows keep your team aligned — from stock counts to branch transfers.',
-    features: [
-      'Shelf refill tasks triggered by low-stock alerts',
-      'Purchase request tasks for reordering',
-      'Branch transfer tasks with approval flow',
-      'Stock counting tasks with count sheets',
-      'Waste disposal recording tasks',
-      'Cash reconciliation tasks',
-      'Task status: Draft → Pending → Approved → In Progress → Fulfilled → Reviewed',
-      'Role-based task assignment and approval',
+    planVariant: 'blue',
+    tagline: 'Structured workflows that keep your team aligned.',
+    description:
+      'Operational work that matters — shelf refills, stock counts, branch transfers, cash handoffs. Assign tasks to staff, track progress, and require approval before execution.',
+    bullets: [
+      'Shelf refill tasks triggered automatically by low-stock alerts',
+      'Purchase request tasks for reorder approvals',
+      'Branch transfer tasks with an inventory-safe approval flow',
+      'Stock counting tasks with structured count sheets',
+      'Waste disposal recording tasks with cost capture',
+      'Cash reconciliation handoff tasks',
+      'Task status pipeline: Draft ? Pending ? Approved ? In Progress ? Fulfilled ? Reviewed',
+      'Role-based assignment — only the right role can approve or execute',
     ],
-    screenshot: '[Screenshot: Task management board with workflow statuses]',
+    capabilities: ['CREATE_TASK'],
   },
+
+  // -- Customer Profiles (MANAGE_CUSTOMERS) ----------------------------------
+  {
+    id: 'customers',
+    icon: '👥',
+    title: 'Customer Profiles',
+    plan: 'Basic+',
+    planVariant: 'emerald',
+    tagline: 'Know your regulars. Apply discounts. Issue proper VAT receipts.',
+    description:
+      'Keep a customer directory and attach profiles to transactions at checkout. Works for loyalty programmes, BIR-mandated VAT receipts for corporate buyers, and Senior Citizen / PWD discount tracking.',
+    bullets: [
+      'Customer directory with contact details and purchase history',
+      'Attach a customer profile to any transaction at checkout',
+      'Senior Citizen and PWD discounts applied automatically with profile',
+      'VAT-official receipt details populated from corporate buyer profile',
+      'Customer transaction history across all branches',
+      'Foundation for loyalty points and marketing (coming soon)',
+    ],
+    capabilities: ['MANAGE_CUSTOMERS'],
+  },
+
+  // -- Reports & Analytics (VIEW_SALES_REPORTS, VIEW_INVENTORY_REPORTS, VIEW_ANALYTICS) --
   {
     id: 'reports',
-    icon: '📊',
+    icon: '📈',
     title: 'Reports & Analytics',
-    plan: 'Premium+',
-    planVariant: 'violet' as const,
-    description: 'The numbers you need to make decisions — not just the ones that are easy to count.',
-    features: [
-      'Sales reports by period, product, and branch',
-      'Inventory valuation report',
-      'Gross profit and margin calculation',
-      'Top-selling products ranking',
-      'Low-stock and out-of-stock reports',
-      'Payment method breakdown',
-      'Employee sales performance',
-      'CSV export for all reports',
+    plan: 'All plans',
+    planVariant: 'emerald',
+    tagline: 'The numbers you need to make decisions — not just the easy ones.',
+    description:
+      'Sales reports, inventory valuation, payment method breakdown, employee performance — all available offline using cached data. Advanced analytics available as a premium add-on.',
+    bullets: [
+      'Sales reports by period, product, branch, and category',
+      'Inventory valuation report with cost and market value',
+      'Gross profit and margin calculation per product',
+      'Top-selling products ranking and movement velocity',
+      'Low-stock and out-of-stock reports with reorder suggestions',
+      'Payment method breakdown — cash vs card vs e-wallet',
+      'Employee sales performance by cashier',
+      'CSV export for every report — take your data anywhere',
     ],
-    screenshot: '[Screenshot: Sales reports dashboard with charts]',
+    capabilities: ['VIEW_SALES_REPORTS', 'VIEW_INVENTORY_REPORTS', 'EXPORT_DATA'],
   },
+
+  // -- Multi-Branch (MANAGE_BRANCHES) ----------------------------------------
   {
     id: 'branches',
-    icon: '🏢',
-    title: 'Multi-Branch & Employees',
+    icon: '🏪',
+    title: 'Multi-Branch Management',
     plan: 'Premium+',
-    planVariant: 'violet' as const,
-    description: 'One account, multiple locations. Each branch has its own config, stock, and team — with central oversight.',
-    features: [
+    planVariant: 'violet',
+    tagline: 'One account, many locations — with central oversight.',
+    description: 'Each branch has its own inventory, staff, and configuration. Reports consolidate across all branches so you always have the full picture.',
+    bullets: [
       'Unlimited branches on Enterprise (3 on Premium)',
-      'Branch-level inventory and sales separation',
-      'Centralized reporting across all branches',
+      'Branch-level inventory and sales isolation',
+      'Consolidated reporting across all branches with filter by location',
       'Role-based access: Admin, Supervisor, Cashier, Service Provider',
-      'Employee accounts with branch assignment',
-      'Configurable feature toggles per branch',
-      'Branch-level VAT and compliance config',
+      'Employee accounts with branch assignment and permission sets',
+      'Branch-level VAT and compliance configuration',
+      'Stock transfers between branches with approval workflow',
     ],
-    screenshot: '[Screenshot: Multi-branch overview and employee management]',
+    capabilities: ['MANAGE_BRANCHES'],
+  },
+
+  // -- Employees (MANAGE_EMPLOYEES) ------------------------------------------
+  {
+    id: 'employees',
+    icon: '👤',
+    title: 'Employee Management',
+    plan: 'All plans',
+    planVariant: 'emerald',
+    tagline: 'The right people see the right things.',
+    description:
+      'Create employee accounts, assign them to branches, and control exactly what they can see and do. Permission enforcement works even when offline.',
+    bullets: [
+      'Unlimited employee accounts on Premium and Enterprise',
+      'Four built-in roles: Admin, Supervisor, Cashier, Service Provider',
+      'Fine-grained permission control per role',
+      'Branch-level access assignment — staff only see their own location',
+      'Activity and audit logs per employee',
+      'Permission checks enforced locally — works offline too',
+    ],
+    capabilities: ['MANAGE_EMPLOYEES'],
+  },
+
+  // -- Coming Soon ------------------------------------------------------------
+  {
+    id: 'loyalty',
+    icon: '⭐',
+    title: 'Loyalty Points',
+    plan: 'Premium+',
+    planVariant: 'orange',
+    tagline: 'Keep regulars coming back with points they can actually spend.',
+    description:
+      'A native loyalty programme — no third-party app required. Customers earn points on every purchase and redeem them for discounts. Currently in development.',
+    bullets: [
+      'Points earned per transaction, configurable earn rate per plan',
+      'Redeemable at checkout for a discount on the next purchase',
+      'Customer-facing points balance visible at checkout',
+      'Points history per customer profile',
+      'Expiry rules for points to encourage timely redemption',
+    ],
+    capabilities: ['LOYALTY_POINTS'],
+    comingSoon: true,
   },
   {
-    id: 'compliance',
-    icon: '🧾',
-    title: 'Compliance',
-    plan: 'All plans',
-    planVariant: 'emerald' as const,
-    description: 'Built to meet Philippines BIR requirements out of the box — with a framework ready for other Southeast Asian markets.',
-    features: [
-      'BIR TIN and PTU number registration',
-      'Sequential invoice numbering per BIR rules',
-      'VAT-inclusive and VAT-exclusive price display',
-      'Tax category support: standard, reduced, exempt, zero-rated',
-      'Sales Tax and VAT computation modes',
-      'GST-ready architecture for Singapore and Malaysia',
-      'Audit-ready transaction logs',
+    id: 'kds',
+    icon: '🖥️',
+    title: 'Kitchen Display System',
+    plan: 'Enterprise+',
+    planVariant: 'orange',
+    tagline: 'Incoming orders, straight to the kitchen screen.',
+    description: "A dedicated kitchen display that shows every order the moment it's placed. Keeps front-of-house and kitchen in sync without paper tickets.",
+    bullets: [
+      'Real-time order display on a separate kitchen screen or tablet',
+      'Order status updates visible to both kitchen and front-of-house',
+      'Filter by station — hot food, cold prep, drinks',
+      'Audio alert on new order arrival',
     ],
-    screenshot: '[Screenshot: Compliance registry and invoice configuration]',
+    capabilities: ['KITCHEN_DISPLAY'],
+    comingSoon: true,
+  },
+  {
+    id: 'delivery',
+    icon: '🚚',
+    title: 'Delivery Management',
+    plan: 'Enterprise+',
+    planVariant: 'orange',
+    tagline: 'Coordinate deliveries without switching apps.',
+    description: 'Assign delivery orders to drivers, track delivery status, and manage delivery zones from inside Start POS.',
+    bullets: [
+      'Delivery order type at checkout with address capture',
+      'Driver assignment and status tracking',
+      'Delivery zone management',
+      'Integration with the order queue',
+    ],
+    capabilities: ['DELIVERY_MANAGEMENT'],
+    comingSoon: true,
   },
 ]
+
+// Group for the overview grid
+const LIVE_MODULES = MODULES.filter(m => !m.comingSoon)
+const COMING_MODULES = MODULES.filter(m => m.comingSoon)
+
+const PLAN_COLORS: Record<string, string> = {
+  emerald: 'bg-emerald-100 text-emerald-700',
+  violet: 'bg-violet-100 text-violet-700',
+  blue: 'bg-blue-100 text-blue-700',
+  orange: 'bg-orange-100 text-orange-700',
+}
 ---
 
 <BaseLayout
   title="Features"
-  description="Full feature walkthrough of Start POS — POS checkout, inventory, purchasing, orders, task management, reports, multi-branch, and BIR compliance."
+  description="Complete feature walkthrough of Start POS — POS checkout, inventory, purchasing, orders, cash reconciliation, task management, reports, multi-branch, and BIR compliance."
 >
 
-  <!-- Hero -->
+  <!-- -- Hero ---------------------------------------------------------------- -->
   <section class="bg-slate-900 pt-16 pb-20 relative overflow-hidden">
     <div class="absolute inset-0 bg-[linear-gradient(rgba(16,185,129,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(16,185,129,0.04)_1px,transparent_1px)] bg-[size:64px_64px]"></div>
-    <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-      <span class="text-xs font-bold text-emerald-400 uppercase tracking-widest">Everything in one platform</span>
-      <h1 class="mt-3 text-4xl sm:text-5xl font-black text-white mb-4">
-        Features built for real operations
-      </h1>
-      <p class="text-lg text-slate-400 max-w-2xl mx-auto">
-        Start POS isn't just a cash register. It's a complete operations platform — built module by module from watching real businesses run.
-      </p>
+    <!-- Glow -->
+    <div class="absolute -top-32 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-emerald-500/8 rounded-full blur-3xl pointer-events-none"></div>
+
+    <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center max-w-3xl mx-auto">
+        <span class="inline-flex items-center gap-1.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-semibold px-4 py-1.5 rounded-full mb-6">
+          ✨ Everything in one platform
+        </span>
+        <h1 class="text-4xl sm:text-5xl lg:text-6xl font-black text-white mb-5 leading-tight">
+          Features built for<br class="hidden sm:block" /> real operations
+        </h1>
+        <p class="text-lg text-slate-400 max-w-2xl mx-auto leading-relaxed mb-8">
+          Start POS isn't just a cash register. It's a complete operations platform — built
+          module by module from watching real businesses run.
+        </p>
+        <div class="flex flex-col sm:flex-row items-center justify-center gap-3">
+          <a href={APP_URL} class="w-full sm:w-auto px-7 py-3.5 bg-emerald-500 text-white font-bold text-sm rounded-xl hover:bg-emerald-600 shadow-lg shadow-emerald-500/25 hover:scale-[1.02] transition-all duration-150">
+            Start free trial — no credit card
+          </a>
+          <a href="/pricing" class="w-full sm:w-auto px-7 py-3.5 border border-slate-700 text-slate-300 font-semibold text-sm rounded-xl hover:border-slate-500 hover:text-white transition-all duration-150">
+            See pricing →
+          </a>
+        </div>
+      </div>
+
+      <!-- Quick stats -->
+      <div class="mt-14 grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-2xl mx-auto text-center">
+        {[
+          { value: '12+', label: 'Feature modules' },
+          { value: '4', label: 'Roles & permissions' },
+          { value: '100%', label: 'Offline capable' },
+          { value: 'BIR', label: 'Compliant out of the box' },
+        ].map(stat => (
+          <div class="bg-white/5 rounded-xl px-4 py-4 border border-white/10">
+            <p class="text-2xl font-black text-white">{stat.value}</p>
+            <p class="text-xs text-slate-400 mt-0.5 leading-snug">{stat.label}</p>
+          </div>
+        ))}
+      </div>
     </div>
   </section>
 
-  <!-- Jump links -->
+  <!-- -- Sticky module nav ---------------------------------------------------- -->
   <nav class="sticky top-16 z-40 bg-white border-b border-slate-200 shadow-sm">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="flex items-center gap-1 overflow-x-auto py-3 scrollbar-hide">
-        {modules.map((m) => (
+      <div class="flex items-center gap-1 overflow-x-auto py-2.5 scrollbar-hide">
+        {LIVE_MODULES.map(m => (
           <a
             href={`#${m.id}`}
-            class="shrink-0 px-3 py-1.5 text-xs font-semibold text-slate-500 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors whitespace-nowrap"
+            class="shrink-0 flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slate-500 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors whitespace-nowrap"
           >
-            {m.icon} {m.title}
+            <span aria-hidden="true">{m.icon}</span>
+            {m.title}
           </a>
         ))}
+        <a
+          href="#coming-soon"
+          class="shrink-0 flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slate-400 hover:text-orange-500 hover:bg-orange-50 rounded-lg transition-colors whitespace-nowrap"
+        >
+          🔍 Coming soon
+        </a>
       </div>
     </div>
   </nav>
 
-  <!-- Module sections — alternating layout -->
-  {modules.map((mod, i) => (
-    <section id={mod.id} class:list={['py-20 sm:py-24', i % 2 === 0 ? 'bg-white' : 'bg-slate-50']}>
+  <!-- -- Offline-first callout banner ---------------------------------------- -->
+  <div class="bg-emerald-50 border-b border-emerald-100">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col sm:flex-row items-center gap-3 justify-center text-center sm:text-left">
+      <span class="text-2xl" aria-hidden="true">📡</span>
+      <div>
+        <span class="text-sm font-bold text-emerald-800">Every feature below works offline.</span>
+        <span class="text-sm text-emerald-700"> Start POS uses a local-first architecture — all data lives on the device first, synced to the cloud when you're back online. Checkout never stops during a network outage.</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- -- Live feature modules ------------------------------------------------- -->
+  {LIVE_MODULES.map((mod, i) => (
+    <section id={mod.id} class:list={['py-20 sm:py-24 scroll-mt-28', i % 2 === 0 ? 'bg-white' : 'bg-slate-50']}>
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class:list={[
-          'grid grid-cols-1 lg:grid-cols-2 gap-12 items-center',
-          i % 2 !== 0 && 'lg:[&>*:first-child]:order-2'
+          'grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center',
+          i % 2 !== 0 && 'lg:[&>*:first-child]:order-2 lg:[&>*:last-child]:order-1'
         ]}>
 
-          <!-- Text -->
+          <!-- Text column -->
           <div class="reveal space-y-6">
             <div>
-              <div class="flex items-center gap-3 mb-3">
-                <span class="text-3xl">{mod.icon}</span>
-                <span class:list={[
-                  'text-xs font-bold px-2.5 py-0.5 rounded-full',
-                  mod.planVariant === 'emerald' ? 'bg-emerald-100 text-emerald-700' :
-                  mod.planVariant === 'violet' ? 'bg-violet-100 text-violet-700' :
-                  'bg-blue-100 text-blue-700'
-                ]}>
+              <div class="flex items-center gap-3 mb-3 flex-wrap">
+                <span class="text-4xl" aria-hidden="true">{mod.icon}</span>
+                <span class:list={['text-xs font-bold px-2.5 py-1 rounded-full', PLAN_COLORS[mod.planVariant]]}>
                   {mod.plan}
                 </span>
               </div>
-              <h2 class="text-2xl sm:text-3xl font-black text-slate-900 mb-3">{mod.title}</h2>
+              <h2 class="text-2xl sm:text-3xl font-black text-slate-900 mb-2 leading-tight">{mod.title}</h2>
+              <p class="text-base font-semibold text-slate-500 mb-3 italic">"{mod.tagline}"</p>
               <p class="text-slate-500 leading-relaxed">{mod.description}</p>
             </div>
 
             <ul class="space-y-2.5">
-              {mod.features.map((f) => (
+              {mod.bullets.map(b => (
                 <li class="flex items-start gap-2.5 text-sm text-slate-600">
-                  <svg class="mt-0.5 shrink-0 text-emerald-500" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <svg class="mt-0.5 shrink-0 text-emerald-500" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                     <polyline points="20 6 9 17 4 12"/>
                   </svg>
-                  {f}
+                  {b}
                 </li>
               ))}
             </ul>
 
-            <a href={APP_URL} class="inline-flex items-center gap-2 text-sm font-semibold text-emerald-600 hover:text-emerald-700 transition-colors">
+            <a href={APP_URL} class="inline-flex items-center gap-2 text-sm font-semibold text-emerald-600 hover:text-emerald-700 transition-colors group">
               Try it free
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <svg class="group-hover:translate-x-0.5 transition-transform" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <line x1="5" y1="12" x2="19" y2="12"/>
                 <polyline points="12 5 19 12 12 19"/>
               </svg>
@@ -259,11 +509,11 @@ const modules = [
 
           <!-- Screenshot placeholder -->
           <div class:list={['reveal reveal-delay-2', i % 2 !== 0 && 'lg:order-1']}>
-            <div class="bg-white rounded-2xl border border-slate-200 shadow-lg overflow-hidden aspect-video flex items-center justify-center">
-              <div class="text-center p-8">
-                <div class="text-5xl mb-3">{mod.icon}</div>
-                <p class="text-sm font-medium text-slate-400">{mod.screenshot}</p>
-                <p class="text-xs text-slate-300 mt-1">Replace with actual screenshot</p>
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-xl overflow-hidden aspect-[4/3] flex items-center justify-center">
+              <div class="text-center p-10">
+                <div class="text-6xl mb-4" aria-hidden="true">{mod.icon}</div>
+                <p class="text-sm font-semibold text-slate-400">{mod.title}</p>
+                <p class="text-xs text-slate-300 mt-1">Screenshot coming soon</p>
               </div>
             </div>
           </div>
@@ -272,6 +522,180 @@ const modules = [
       </div>
     </section>
   ))}
+
+  <!-- -- Coming soon ---------------------------------------------------------- -->
+  <section id="coming-soon" class="py-20 sm:py-24 bg-slate-900 scroll-mt-28">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center mb-14 reveal">
+        <span class="inline-flex items-center gap-1.5 bg-orange-500/10 border border-orange-500/20 text-orange-400 text-xs font-semibold px-4 py-1.5 rounded-full mb-4">
+          🚀 On the roadmap
+        </span>
+        <h2 class="text-3xl sm:text-4xl font-black text-white mb-3">Coming soon</h2>
+        <p class="text-slate-400 max-w-xl mx-auto text-base">
+          These modules are in active development. If one of these is critical for your business, <a href="/contact" class="text-orange-400 underline underline-offset-2 hover:text-orange-300 transition-colors">let us know</a> — user demand shapes the roadmap.
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        {COMING_MODULES.map(mod => (
+          <div class="reveal bg-white/5 border border-white/10 rounded-2xl p-6 hover:bg-white/8 transition-colors">
+            <div class="flex items-center gap-3 mb-4">
+              <span class="text-3xl" aria-hidden="true">{mod.icon}</span>
+              <div>
+                <h3 class="text-base font-bold text-white leading-tight">{mod.title}</h3>
+                <span class="text-xs font-semibold text-orange-400/80">{mod.plan} — Coming soon</span>
+              </div>
+            </div>
+            <p class="text-sm text-slate-400 leading-relaxed mb-4">{mod.description}</p>
+            <ul class="space-y-1.5">
+              {mod.bullets.map(b => (
+                <li class="flex items-start gap-2 text-xs text-slate-500">
+                  <svg class="mt-0.5 shrink-0 text-orange-500/60" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <circle cx="12" cy="12" r="9"/>
+                    <line x1="12" y1="8" x2="12" y2="12"/>
+                    <line x1="12" y1="16" x2="12.01" y2="16"/>
+                  </svg>
+                  {b}
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- -- Full feature matrix -------------------------------------------------- -->
+  <section class="py-20 sm:py-24 bg-white">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center mb-12 reveal">
+        <h2 class="text-3xl sm:text-4xl font-black text-slate-900 mb-3">Full capability overview</h2>
+        <p class="text-slate-500 max-w-xl mx-auto">
+          Which features are on which plan — at a glance.
+        </p>
+      </div>
+
+      <div class="reveal overflow-x-auto rounded-2xl border border-slate-200 shadow-sm">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="bg-slate-50 border-b border-slate-200">
+              <th class="px-5 py-3.5 text-left font-bold text-slate-700 w-1/2">Feature</th>
+              <th class="px-4 py-3.5 text-center font-bold text-slate-500 text-xs whitespace-nowrap">Basic</th>
+              <th class="px-4 py-3.5 text-center font-bold text-violet-600 text-xs whitespace-nowrap">Premium</th>
+              <th class="px-4 py-3.5 text-center font-bold text-blue-600 text-xs whitespace-nowrap">Enterprise</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100">
+            {[
+              { name: 'POS Checkout & Payments',         basic: true,  premium: true,  enterprise: true  },
+              { name: 'Product Catalogue & Variants',    basic: true,  premium: true,  enterprise: true  },
+              { name: 'Refunds & Order Adjustments',     basic: true,  premium: true,  enterprise: true  },
+              { name: 'BIR Receipts & Compliance',       basic: true,  premium: true,  enterprise: true  },
+              { name: 'Customer Profiles & Discounts',   basic: true,  premium: true,  enterprise: true  },
+              { name: 'Employee Management',             basic: true,  premium: true,  enterprise: true  },
+              { name: 'Sales Reports & CSV Export',      basic: true,  premium: true,  enterprise: true  },
+              { name: 'Transaction History',             basic: true,  premium: true,  enterprise: true  },
+              { name: 'Order Queue & Kitchen Flow',      basic: true,  premium: true,  enterprise: true  },
+              { name: 'Cash Reconciliation (Shifts)',    basic: false, premium: true,  enterprise: true  },
+              { name: 'Inventory Tracking & Movements', basic: false, premium: true,  enterprise: true  },
+              { name: 'Inventory Reports & Valuation',  basic: false, premium: true,  enterprise: true  },
+              { name: 'Batch Preparation & Recipes',    basic: false, premium: true,  enterprise: true  },
+              { name: 'Supplier Management',            basic: false, premium: true,  enterprise: true  },
+              { name: 'Multi-Branch (up to 3)',         basic: false, premium: true,  enterprise: true  },
+              { name: 'Purchase Orders & Receiving',    basic: false, premium: false, enterprise: true  },
+              { name: 'Task Management & Approvals',    basic: false, premium: false, enterprise: true  },
+              { name: 'Multi-Branch (up to 5)',         basic: false, premium: false, enterprise: true  },
+              { name: 'Analytics Dashboard',            basic: false, premium: false, enterprise: true  },
+              { name: 'API Access',                     basic: false, premium: false, enterprise: true  },
+            ].map(row => (
+              <tr class="hover:bg-slate-50/70 transition-colors">
+                <td class="px-5 py-3 text-slate-700 font-medium">{row.name}</td>
+                <td class="px-4 py-3 text-center">
+                  {row.basic
+                    ? <svg class="inline text-emerald-500" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-label="Included"><polyline points="20 6 9 17 4 12"/></svg>
+                    : <span class="inline-block w-3 h-0.5 bg-slate-200 rounded-full" aria-label="Not included"></span>
+                  }
+                </td>
+                <td class="px-4 py-3 text-center">
+                  {row.premium
+                    ? <svg class="inline text-violet-500" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-label="Included"><polyline points="20 6 9 17 4 12"/></svg>
+                    : <span class="inline-block w-3 h-0.5 bg-slate-200 rounded-full" aria-label="Not included"></span>
+                  }
+                </td>
+                <td class="px-4 py-3 text-center">
+                  {row.enterprise
+                    ? <svg class="inline text-blue-500" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-label="Included"><polyline points="20 6 9 17 4 12"/></svg>
+                    : <span class="inline-block w-3 h-0.5 bg-slate-200 rounded-full" aria-label="Not included"></span>
+                  }
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <p class="text-center text-xs text-slate-400 mt-5">
+        Every plan starts with a free 1-month trial. <a href="/pricing" class="text-emerald-600 font-semibold hover:underline">See full pricing →</a>
+      </p>
+    </div>
+  </section>
+
+  <!-- -- Why offline-first matters ------------------------------------------- -->
+  <section class="py-20 sm:py-24 bg-slate-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+        <div class="reveal space-y-5">
+          <span class="inline-flex items-center gap-1.5 bg-emerald-100 border border-emerald-200 text-emerald-700 text-xs font-bold px-3 py-1 rounded-full">
+            ⚡ Built offline-first
+          </span>
+          <h2 class="text-3xl sm:text-4xl font-black text-slate-900 leading-tight">
+            Your POS still works when the internet doesn't.
+          </h2>
+          <p class="text-slate-500 leading-relaxed">
+            Start POS stores all data locally on the device first. Every sale, every order, every inventory
+            movement is written locally and synced to the cloud in the background. If your connection drops
+            mid-shift, nothing stops — and when connectivity returns, everything syncs automatically.
+          </p>
+          <ul class="space-y-3">
+            {[
+              { icon: '✅', text: 'Checkout and payment processing — fully offline' },
+              { icon: '🔄', text: 'Inventory updates sync when connection is restored' },
+              { icon: '🔒', text: 'Role-based permissions enforced on-device — no server round-trip' },
+              { icon: '📊', text: 'Reports load from cached data — no loading spinners' },
+              { icon: '🔁', text: 'Conflict-free sync when multiple branches come back online' },
+            ].map(item => (
+              <li class="flex items-center gap-3 text-sm text-slate-600">
+                <span aria-hidden="true">{item.icon}</span>
+                {item.text}
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <div class="reveal reveal-delay-2 bg-slate-900 rounded-2xl p-8 border border-slate-800">
+          <p class="text-xs font-bold text-emerald-400 uppercase tracking-widest mb-4">How it works</p>
+          <div class="space-y-4">
+            {[
+              { step: '1', title: 'Sale recorded', detail: 'Transaction written to local device storage immediately', colour: 'emerald' },
+              { step: '2', title: 'Sync attempted', detail: 'Background worker tries to push to cloud. If offline — queued.', colour: 'emerald' },
+              { step: '3', title: 'Connection returns', detail: 'Queued records sync automatically, in order, no duplicates', colour: 'emerald' },
+              { step: '4', title: 'Consistent everywhere', detail: 'All branches see the same state once synced', colour: 'emerald' },
+            ].map(item => (
+              <div class="flex items-start gap-4">
+                <div class="w-7 h-7 rounded-full bg-emerald-500/20 flex items-center justify-center shrink-0">
+                  <span class="text-xs font-black text-emerald-400">{item.step}</span>
+                </div>
+                <div>
+                  <p class="text-sm font-semibold text-white">{item.title}</p>
+                  <p class="text-xs text-slate-400 mt-0.5">{item.detail}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
 
   <FinalCTA />
 

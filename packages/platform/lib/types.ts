@@ -77,6 +77,9 @@ const BaseConfigSchema = z.object({
   [ConfigurationKey.LOCALE]: z.string(),
   [ConfigurationKey.CURRENCY]: z.string(),
   [ConfigurationKey.AUTO_APPROVE_LOW_STOCK_REFILL]: z.boolean().default(true),
+  // --- Refund policy ---
+  [ConfigurationKey.REFUND_WINDOW_HOURS]: z.number().default(-1),
+  [ConfigurationKey.REFUND_REQUIRES_SUPERVISOR]: z.boolean().default(false),
   // --- Phase 5: Composable Pricing ---
   [ConfigurationKey.COMPOSABLE_BRANCH_MONTHLY_RATE]: z.number().default(0),
   [ConfigurationKey.COMPOSABLE_MAX_FEATURES]: z.number().default(0),

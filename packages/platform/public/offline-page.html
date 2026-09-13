@@ -1,0 +1,280 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Page not available offline — StartPOS</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+        --bg: #0a0a0a;
+        --bg2: #111113;
+        --fg: #f4f4f5;
+        --muted: #a1a1aa;
+        --border: #27272a;
+        --primary: #10b981;
+        --primary-dim: rgba(16, 185, 129, 0.12);
+        --warn: #f59e0b;
+        --warn-dim: rgba(245, 158, 11, 0.1);
+        --radius: 12px;
+      }
+      @media (prefers-color-scheme: light) {
+        :root {
+          --bg: #f9fafb;
+          --bg2: #ffffff;
+          --fg: #111827;
+          --muted: #6b7280;
+          --border: #e5e7eb;
+          --primary-dim: rgba(16, 185, 129, 0.1);
+          --warn-dim: rgba(245, 158, 11, 0.08);
+        }
+      }
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      html, body { height: 100%; }
+      body {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        background: var(--bg);
+        color: var(--fg);
+      }
+
+      .card {
+        max-width: 400px;
+        width: 100%;
+        background: var(--bg2);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 32px 28px;
+        text-align: center;
+      }
+
+      /* Icon container */
+      .icon-wrap {
+        width: 56px;
+        height: 56px;
+        border-radius: 50%;
+        background: var(--warn-dim);
+        border: 1px solid rgba(245,158,11,0.2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 20px;
+      }
+      .icon-wrap svg {
+        width: 26px;
+        height: 26px;
+        color: var(--warn);
+        stroke: var(--warn);
+      }
+
+      h1 {
+        font-size: 17px;
+        font-weight: 600;
+        margin-bottom: 8px;
+        letter-spacing: -0.01em;
+      }
+      p {
+        font-size: 13px;
+        line-height: 1.65;
+        color: var(--muted);
+        margin-bottom: 24px;
+      }
+
+      /* Countdown bar */
+      .redirect-row {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        font-size: 12px;
+        color: var(--muted);
+        margin-bottom: 20px;
+      }
+      .count-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 22px;
+        height: 22px;
+        background: var(--primary-dim);
+        border: 1px solid rgba(16,185,129,0.25);
+        color: var(--primary);
+        border-radius: 99px;
+        font-size: 11px;
+        font-weight: 600;
+        padding: 0 6px;
+        transition: transform 0.2s;
+      }
+
+      .progress-track {
+        height: 3px;
+        background: var(--border);
+        border-radius: 99px;
+        overflow: hidden;
+        margin-bottom: 20px;
+      }
+      .progress-fill {
+        height: 100%;
+        background: var(--primary);
+        border-radius: 99px;
+        width: 100%;
+        transform-origin: left;
+        animation: shrink var(--countdown-duration, 6s) linear forwards;
+      }
+      @keyframes shrink {
+        from { transform: scaleX(1); }
+        to   { transform: scaleX(0); }
+      }
+
+      /* Buttons */
+      .btn-row {
+        display: flex;
+        gap: 8px;
+        justify-content: center;
+        flex-wrap: wrap;
+      }
+      .btn {
+        appearance: none;
+        font-size: 13px;
+        font-weight: 500;
+        padding: 9px 20px;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: background 0.15s, opacity 0.15s;
+        border: 1px solid var(--border);
+      }
+      .btn-primary {
+        background: var(--primary);
+        color: #fff;
+        border-color: var(--primary);
+      }
+      .btn-primary:hover { opacity: 0.88; }
+      .btn-ghost {
+        background: transparent;
+        color: var(--muted);
+      }
+      .btn-ghost:hover { background: var(--border); color: var(--fg); }
+
+      /* Divider */
+      .divider {
+        border: none;
+        border-top: 1px solid var(--border);
+        margin: 20px 0;
+      }
+
+      /* Status pill */
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 11px;
+        color: var(--muted);
+        background: var(--bg);
+        border: 1px solid var(--border);
+        padding: 4px 10px;
+        border-radius: 99px;
+      }
+      .dot {
+        width: 5px;
+        height: 5px;
+        border-radius: 50%;
+        background: #ef4444;
+      }
+      .dot.online { background: var(--primary); }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <!-- Warning icon -->
+      <div class="icon-wrap">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+          <line x1="12" y1="9" x2="12" y2="13"/>
+          <line x1="12" y1="17" x2="12.01" y2="17"/>
+        </svg>
+      </div>
+
+      <h1>This page isn't cached yet</h1>
+      <p>
+        You're offline and this page hasn't been saved to your device.
+        You'll be taken to the home page where your cached data is available.
+      </p>
+
+      <!-- Countdown -->
+      <div class="redirect-row">
+        <span>Redirecting to home in</span>
+        <span class="count-badge" id="count">6</span>
+        <span>seconds</span>
+      </div>
+      <div class="progress-track">
+        <div class="progress-fill" id="progress" style="--countdown-duration: 6s"></div>
+      </div>
+
+      <!-- Actions -->
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="goHome()">Go to home now</button>
+        <button class="btn btn-ghost" onclick="goBack()">Go back</button>
+      </div>
+
+      <hr class="divider" />
+
+      <!-- Connection status -->
+      <div class="pill">
+        <span class="dot" id="dot"></span>
+        <span id="status-text">No internet connection</span>
+      </div>
+    </div>
+
+    <script>
+      var COUNTDOWN = 6
+      var remaining = COUNTDOWN
+      var dot = document.getElementById('dot')
+      var statusText = document.getElementById('status-text')
+      var countEl = document.getElementById('count')
+
+      function goHome() {
+        window.location.href = '/'
+      }
+
+      function goBack() {
+        if (window.history.length > 1) window.history.back()
+        else goHome()
+      }
+
+      // Tick countdown every second
+      var timer = setInterval(function () {
+        remaining--
+        countEl.textContent = remaining
+        if (remaining <= 0) {
+          clearInterval(timer)
+          goHome()
+        }
+      }, 1000)
+
+      // If back online before countdown, reload the actual page
+      window.addEventListener('online', function () {
+        clearInterval(timer)
+        dot.classList.add('online')
+        statusText.textContent = 'Back online — reloading page…'
+        // Small delay so the user sees the status change
+        setTimeout(function () { window.location.reload() }, 600)
+      })
+
+      // Reflect offline status
+      function updateStatus() {
+        if (navigator.onLine) {
+          dot.classList.add('online')
+          statusText.textContent = 'Back online'
+        } else {
+          dot.classList.remove('online')
+          statusText.textContent = 'No internet connection'
+        }
+      }
+      window.addEventListener('offline', updateStatus)
+      updateStatus()
+    </script>
+  </body>
+</html>

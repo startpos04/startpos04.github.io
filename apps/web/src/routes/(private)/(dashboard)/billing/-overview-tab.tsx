@@ -1,13 +1,22 @@
 /**
  * Branch Billing Overview Tab
  *
- * Displays current credit balance, transaction quota, and available credit packages
+ * Displays current credit balance, transaction quota, and available credit packages.
+ *
+ * Online:  fetches authoritative data from server via getBranchCreditBalance and
+ *          fetchEntitlementDetails.
+ * Offline: reads from local collections (creditLedgerCollection for balance,
+ *          usageCounterCollection for TX quota) so the tab renders correctly
+ *          instead of showing an error or spinner indefinitely.
  */
 
 import { Badge } from '@platform/components/ui/badge'
 import { Button } from '@platform/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@platform/components/ui/card'
 import { Skeleton } from '@platform/components/ui/skeleton'
+import { creditLedgerCollection, usageCounterCollection } from '@platform/db/collections'
+import { useIsOnline } from '@platform/hooks/use-is-online'
+import { and, eq, useLiveQuery } from '@tanstack/react-db'
 import { useQuery } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
 import { AlertCircle, GitBranchIcon, ShoppingCartIcon, TrendingUp, Zap } from 'lucide-react'
@@ -19,8 +28,9 @@ import { getBranchCreditBalance } from '@/lib/server-fn/get-branch-credit-balanc
 
 export function OverviewTab() {
   const user = useAuthenticatedUser()
+  const isOnline = useIsOnline()
 
-  // Query branch credit balance
+  // ── Online queries ─────────────────────────────────────────────────────────
   const {
     data: creditData,
     isLoading: creditLoading,
@@ -28,15 +38,62 @@ export function OverviewTab() {
   } = useQuery({
     queryKey: ['branch-credit-balance'],
     queryFn: () => getBranchCreditBalance(),
-    staleTime: 1000 * 60 * 5, // 5 minutes
+    staleTime: 1000 * 60 * 5,
+    enabled: isOnline,
   })
 
-  // Query entitlement details to get transaction usage
   const { data: entitlementData, isLoading: entitlementLoading } = useQuery({
     queryKey: ['entitlement-details'],
     queryFn: () => fetchEntitlementDetails(),
-    staleTime: 1000 * 60 * 5, // 5 minutes
+    staleTime: 1000 * 60 * 5,
+    enabled: isOnline,
   })
+
+  // ── Offline fallbacks ──────────────────────────────────────────────────────
+  // Credit balance: derive from the most recent creditLedger entry for this branch.
+  const offlineLedger = useLiveQuery(
+    q =>
+      q
+        .from({ cl: creditLedgerCollection })
+        .where(({ cl }) => eq(cl.businessId, user.business.id))
+        .orderBy(({ cl }) => cl.createdAt, 'desc')
+        .select(({ cl }) => cl),
+    [user.business.id],
+  )
+
+  // TX quota: derive from the open usage counter for this branch.
+  const offlineUsageCounter = useLiveQuery(
+    q =>
+      q
+        .from({ uc: usageCounterCollection })
+        .where(({ uc }) => and(eq(uc.businessId, user.business.id), !uc.isClosed))
+        .select(({ uc }) => uc),
+    [user.business.id],
+  )
+
+  // ── Derive values from whichever path is available ─────────────────────────
+  const isLoading = isOnline ? creditLoading || entitlementLoading : false
+
+  let creditBalance: number
+  let txRemaining: number | null
+  let txUsedThisPeriod: number
+
+  if (isOnline) {
+    creditBalance = creditData?.balance ?? 0
+    txRemaining = entitlementData?.txRemaining ?? null
+    txUsedThisPeriod = entitlementData?.txUsedThisPeriod ?? 0
+  } else {
+    // Credit balance from local collection; fall back to authStore entitlement
+    const latestLedger = offlineLedger.data?.[0]
+    creditBalance = latestLedger?.balanceAfter ?? user.entitlement.creditBalance ?? 0
+
+    // TX quota from local usage counter
+    const openCounter = offlineUsageCounter.data?.[0]
+    const txUsed = openCounter?.txCount ?? 0
+    const includedTx = user.entitlement.includedTxPerMonth ?? null
+    txUsedThisPeriod = txUsed
+    txRemaining = includedTx === null || includedTx === -1 ? null : Math.max(0, includedTx - txUsed)
+  }
 
   if (!user.branch) {
     toast.error('Unable to load branch information. Please contact support if this issue persists.')
@@ -51,7 +108,7 @@ export function OverviewTab() {
     )
   }
 
-  if (creditError) {
+  if (isOnline && creditError) {
     toast.error('Failed to load branch credit information. Please try again later.')
     return (
       <div className='flex items-center justify-center h-full p-6'>
@@ -65,12 +122,8 @@ export function OverviewTab() {
   }
 
   const branchName = user.branch.name
-  const txRemaining = entitlementData?.txRemaining ?? null
-  const txUsedThisPeriod = entitlementData?.txUsedThisPeriod ?? 0
-  const creditBalance = creditData?.balance ?? 0
-  const isLoading = creditLoading || entitlementLoading
 
-  // For display - show subscription TX quota
+  // For display — show subscription TX quota
   const isUnlimitedTx = txRemaining === null
   const displayQuotaUsed = txUsedThisPeriod
   const displayQuotaRemaining = txRemaining
@@ -80,7 +133,6 @@ export function OverviewTab() {
     return <OverviewSkeleton />
   }
 
-  // Determine if branch is approaching or at its limit
   const isAtLimit = !isUnlimitedTx && displayQuotaRemaining !== null && displayQuotaRemaining <= 0
   const isNearLimit =
     !isUnlimitedTx && displayQuotaRemaining !== null && displayQuotaRemaining > 0 && displayQuotaRemaining <= (displayQuotaUsed + displayQuotaRemaining) * 0.2
@@ -112,8 +164,10 @@ export function OverviewTab() {
                   Running Low
                 </Badge>
               )}
+              {!isOnline && <p className='text-xs text-muted-foreground mt-1 italic'>Cached — reconnect for live count</p>}
             </CardContent>
           </Card>
+
           <Card>
             <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
               <CardTitle className='text-sm font-medium'>Credit Balance</CardTitle>
@@ -127,6 +181,7 @@ export function OverviewTab() {
                   No Credits Available
                 </Badge>
               )}
+              {!isOnline && <p className='text-xs text-muted-foreground mt-1 italic'>Cached — reconnect for live balance</p>}
             </CardContent>
           </Card>
 
@@ -159,7 +214,7 @@ export function OverviewTab() {
           </Card>
         )}
 
-        {/* Credit Package Purchase Section */}
+        {/* Credit Package Purchase Section — only actionable online */}
         <Card>
           <CardHeader className='pb-3'>
             <div>
@@ -168,7 +223,7 @@ export function OverviewTab() {
             </div>
           </CardHeader>
           <CardContent>
-            <BranchCreditPackageList />
+            <BranchCreditPackageList disabled={!isOnline} />
           </CardContent>
         </Card>
       </div>
@@ -176,12 +231,13 @@ export function OverviewTab() {
   )
 }
 
-function BranchCreditPackageList() {
+function BranchCreditPackageList({ disabled }: { disabled?: boolean }) {
   const packages = getBranchCreditPackages()
   const navigate = useNavigate()
 
   return (
     <div className='space-y-2'>
+      {disabled && <p className='text-xs text-muted-foreground italic pb-1'>Credit purchases require an internet connection.</p>}
       {packages.map(pkg => (
         <div key={pkg.id} className='flex flex-col sm:flex-row sm:items-center justify-between py-3 px-4 rounded-lg bg-muted/40 gap-4'>
           <div className='flex items-center gap-3 min-w-0'>
@@ -209,6 +265,7 @@ function BranchCreditPackageList() {
               size='sm'
               variant='ghost'
               className='h-8 px-3 text-xs w-fit'
+              disabled={disabled}
               onClick={() => navigate({ to: '/billing/credits/checkout', search: { packageId: pkg.id } })}
             >
               <ShoppingCartIcon className='h-3 w-3 mr-1.5' />

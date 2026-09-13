@@ -5,16 +5,17 @@
  * and provides actions to enable, pause, dismiss, or restore it.
  */
 
+import { BRAND_WEBSITE_URL } from '@constants/lib/contact'
 import { Badge } from '@platform/components/ui/badge'
 import { Button } from '@platform/components/ui/button'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@platform/components/ui/tooltip'
 import { cn } from '@platform/lib/utils'
 import { useQueryClient } from '@tanstack/react-query'
-import { CheckCircle2, ChevronDown, ChevronUp, Info, Pause, Play, RefreshCw, TrendingUp, X } from 'lucide-react'
+import { CheckCircle2, ChevronDown, ChevronUp, ExternalLink, Info, Pause, Play, RefreshCw, TrendingUp, X } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
 import { refreshAuthUser } from '@/lib/better-auth/auth-store'
-import { getCapabilityBenefits, getCapabilitySteps } from '@/lib/capabilities/capability-guide'
+import { getCapabilityBenefits, getCapabilityFeaturesUrl, getCapabilitySteps } from '@/lib/capabilities/capability-guide'
 import { acceptCapability, dismissCapability, enableCapability, pauseCapability, restoreCapability } from '@/lib/server-fn/capability-actions'
 import type { CapabilityStateRow } from '@/lib/server-fn/fetch-capability-states'
 import { closeBusinessCapabilitySidebar } from './business-capability-sidebar'
@@ -131,9 +132,15 @@ export function BusinessCapabilityDetailsSidebar({ capability, onClose }: Busine
               </Badge>
             </div>
             <div className='ml-auto'>
-              <Button variant='link' size='sm' className='h-auto p-0 text-xs text-primary'>
-                Learn More →
-              </Button>
+              <a
+                href={getCapabilityFeaturesUrl(capability.capabilityId, BRAND_WEBSITE_URL)}
+                target='_blank'
+                rel='noopener noreferrer'
+                className='inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline underline-offset-4'
+              >
+                Learn More
+                <ExternalLink className='h-3 w-3' />
+              </a>
             </div>
           </div>
 

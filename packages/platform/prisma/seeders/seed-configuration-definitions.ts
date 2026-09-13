@@ -128,6 +128,36 @@ export async function seedConfigurationDefinitions(prisma: PrismaClient) {
     },
 
     // ═══════════════════════════════════════════════════════════
+    // REFUND POLICY
+    // ═══════════════════════════════════════════════════════════
+    {
+      id: 'REFUND_WINDOW_HOURS',
+      key: 'REFUND_WINDOW_HOURS',
+      label: 'Refund Window (Hours)',
+      description: 'How many hours after a sale a refund can be issued. -1 = unlimited, 0 = refunds disabled, any positive value = hours allowed.',
+      category: 'OPERATIONAL',
+      dataType: 'NUMBER',
+      defaultValue: '-1',
+      scope: 'BUSINESS',
+      required: false,
+      validation: { min: -1 },
+      countryCode: null,
+    },
+    {
+      id: 'REFUND_REQUIRES_SUPERVISOR',
+      key: 'REFUND_REQUIRES_SUPERVISOR',
+      label: 'Require Supervisor for Refunds',
+      description: 'When enabled, only users with Supervisor or Admin role can issue refunds.',
+      category: 'OPERATIONAL',
+      dataType: 'BOOLEAN',
+      defaultValue: 'false',
+      scope: 'BUSINESS',
+      required: false,
+      validation: { enum: ['true', 'false'] },
+      countryCode: null,
+    },
+
+    // ═══════════════════════════════════════════════════════════
     // BILLING & SUBSCRIPTION POLICIES (Platform-scoped)
     // ═══════════════════════════════════════════════════════════
     {

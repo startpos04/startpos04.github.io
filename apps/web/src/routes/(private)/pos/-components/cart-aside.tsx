@@ -21,7 +21,12 @@ import { ProductItemsModal } from './product-items'
 
 export const CartAside = withForm({
   ...posFormOpts,
-  render: ({ form }) => {
+  props: {} as {
+    cashDrawerEnabled?: boolean
+    barcodeEnabled?: boolean
+    canPrintReceipt?: boolean
+  },
+  render: ({ form, cashDrawerEnabled = false, barcodeEnabled = false, canPrintReceipt = true }) => {
     const order = useStore(form.store, s => s.values.order)
     const { search = '', page = 1, pageSize = 20 } = useSearch({ from: '/(private)/pos/' })
     const { orderItems } = usePOS({ orderId: order?.id, searchQuery: search, page, pageSize })
@@ -39,6 +44,8 @@ export const CartAside = withForm({
       if (isProcessing.current) return
       MountManager.show(PaymentDialog, {
         total,
+        cashDrawerRequired: cashDrawerEnabled,
+        canPrintReceipt,
         onConfirm: async (payments, compliance) => {
           isProcessing.current = true
           try {
@@ -83,7 +90,7 @@ export const CartAside = withForm({
               onClick={handleNewOrder}
               className='h-8 px-2 text-[10px] font-bold border border-dashed rounded-lg hover:bg-destructive/10 hover:text-destructive hover:border-destructive/50 transition-all'
             >
-              NEW ORDER
+              Clear Order
             </Button>
           </div>
 
@@ -113,10 +120,10 @@ export const CartAside = withForm({
             return (
               <div className='flex gap-6 justify-center select-none'>
                 <Badge variant='secondary' className='rounded-lg px-2 py-0.5 text-[10px] font-bold'>
-                  {uniqueItems} {uniqueItems === 1 ? 'item' : 'items'}
+                  {uniqueItems} {uniqueItems === 1 ? 'product' : 'products'}
                 </Badge>
                 <Badge variant='outline' className='rounded-lg bg-primary/5 px-2 py-0.5 text-[10px] font-bold'>
-                  {totalQty} quantity
+                  {totalQty} {totalQty === 1 ? 'piece' : 'pieces'}
                 </Badge>
               </div>
             )
@@ -175,17 +182,17 @@ export const CartAside = withForm({
                                 type='button'
                                 size='icon'
                                 variant='ghost'
-                                className='h-6 w-6 rounded-lg text-foreground'
+                                className='h-9 w-9 rounded-lg text-foreground'
                                 onClick={() => {
                                   if (item.quantity > 1) form.setFieldValue(`items[${index}].quantity`, item.quantity - 1)
                                   else form.removeFieldValue('items', index)
                                 }}
                               >
-                                <Minus className='size-3' />
+                                <Minus className='size-4' />
                               </Button>
 
                               {/* The dynamic key attribute forces an execution repaint, executing our bump class */}
-                              <span key={item.quantity} className='text-xs font-black w-4 text-center text-foreground inline-block animate-scale-bump'>
+                              <span key={item.quantity} className='text-sm font-black w-6 text-center text-foreground inline-block animate-scale-bump'>
                                 {item.quantity}
                               </span>
 
@@ -193,7 +200,7 @@ export const CartAside = withForm({
                                 type='button'
                                 size='icon'
                                 variant='ghost'
-                                className='h-6 w-6 rounded-lg text-foreground'
+                                className='h-9 w-9 rounded-lg text-foreground'
                                 disabled={!isUnlimited && additionalYieldPossible === 0}
                                 onClick={() => {
                                   if (isUnlimited || additionalYieldPossible > 0) {
@@ -201,7 +208,7 @@ export const CartAside = withForm({
                                   }
                                 }}
                               >
-                                <Plus className='size-3' />
+                                <Plus className='size-4' />
                               </Button>
                             </div>
 
@@ -287,7 +294,7 @@ export const CartAside = withForm({
                   onClick={() => handleConfirm(summary.totalAmount)}
                 >
                   <CreditCard className='size-5 stroke-[2.5]' />
-                  CHECKOUT
+                  Checkout
                 </Button>
               </div>
             )

@@ -15,7 +15,7 @@ export const CONTACT_EMAIL = 'startpos04@gmail.com'
 export const CONTACT_PHONE = '+63 939 273 7849'
 
 /** Public-facing website hostname (no protocol). */
-export const BRAND_WEBSITE = 'startpos.github.io'
+export const BRAND_WEBSITE = 'http://localhost:4321'
 
 /** Full website URL with protocol — use for links and QR codes. */
 export const BRAND_WEBSITE_URL = `https://${BRAND_WEBSITE}`

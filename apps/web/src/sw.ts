@@ -1,5 +1,15 @@
+/**
+ * sw.ts — Web app service worker entry point.
+ *
+ * App-specific concerns live here (runtime caching rules, OPFS worker exclusion,
+ * lazy precache for JS/CSS). All shared infrastructure is imported from the
+ * platform package so it stays in sync with the admin app automatically.
+ */
+
+import { registerActivateCleanup, registerMessageListener } from '@platform/serwist/background-precache'
+import { offlineFallbackResponse } from '@platform/serwist/offline-fallback'
 import type { PrecacheEntry, SerwistGlobalConfig } from 'serwist'
-import { CacheFirst, NavigationRoute, NetworkFirst, NetworkOnly, Serwist, StaleWhileRevalidate } from 'serwist'
+import { CacheFirst, NavigationRoute, NetworkOnly, Serwist, StaleWhileRevalidate } from 'serwist'
 
 declare global {
   interface WorkerGlobalScope extends SerwistGlobalConfig {
@@ -13,14 +23,12 @@ declare const self: ServiceWorkerGlobalScope
 const isProd = typeof process !== 'undefined' ? process.env['NODE_ENV'] === 'production' : import.meta.env?.MODE === 'production'
 
 const BUILD_ID = typeof process !== 'undefined' ? (process.env['BUILD_ID'] ?? 'dev') : 'dev'
-const LAZY_CACHE_NAME = `lazy-precache-${BUILD_ID}`
-const LAZY_BATCH_SIZE = 6
-const LAZY_BATCH_DELAY_MS = 400
-const COMPLETE_MARKER_URL = '/__lazy_precache_complete__'
 
-// A background run is already in flight — prevents overlapping runs if,
-// e.g., an 'online' event and a client message both fire close together.
-let precacheInFlight = false
+const LAZY_CACHE_NAME = `lazy-precache-${BUILD_ID}`
+
+// ---------------------------------------------------------------------------
+// Serwist instance
+// ---------------------------------------------------------------------------
 
 const serwist = new Serwist({
   disableDevLogs: false,
@@ -28,26 +36,12 @@ const serwist = new Serwist({
   skipWaiting: true,
   clientsClaim: true,
   navigationPreload: isProd,
-  ...(isProd
-    ? {
-        fallbacks: {
-          entries: [
-            {
-              url: '/offline.html',
-              matcher({ request }: { request: Request }) {
-                return request.destination === 'document'
-              },
-            },
-          ],
-        },
-      }
-    : {}),
   runtimeCaching: isProd
     ? [
-        {
-          matcher: ({ request }) => request.mode === 'navigate',
-          handler: new NetworkFirst({ cacheName: 'pages-cache', networkTimeoutSeconds: 4 }),
-        },
+        // NOTE: Navigation requests are handled exclusively by the NavigationRoute
+        // registered below (precacheStrategy = CacheFirst). Do NOT add a NetworkFirst
+        // handler here for request.mode === 'navigate' — it runs before NavigationRoute,
+        // hits the network, and causes a "site can't be reached" flash when offline.
         {
           matcher: ({ url }) => url.host === 'images.unsplash.com',
           handler: new CacheFirst({ cacheName: 'unsplash-images' }),
@@ -57,9 +51,8 @@ const serwist = new Serwist({
           handler: new NetworkOnly(),
         },
         {
-          // Reads the SAME cache the background job below fills, so whichever
-          // fills a given file first — a real visit, or the background job —
-          // benefits the other.
+          // Reads the same cache the background precache job fills, so whichever
+          // fills a given file first benefits the other.
           matcher: ({ request, url }) => request.destination === 'script' && !url.pathname.includes('opfs-worker'),
           handler: new StaleWhileRevalidate({ cacheName: LAZY_CACHE_NAME }),
         },
@@ -68,8 +61,8 @@ const serwist = new Serwist({
           handler: new CacheFirst({ cacheName: 'static-assets' }),
         },
         {
-          // Fetched fresh on demand, never SW-cached — large, and only needed
-          // once the offline DB actually initializes.
+          // OPFS worker is large and only needed once the offline DB initialises —
+          // never SW-cached, always fetched fresh on demand.
           matcher: ({ url }) => url.pathname.includes('opfs-worker'),
           handler: new NetworkOnly(),
         },
@@ -77,103 +70,47 @@ const serwist = new Serwist({
     : [{ matcher: () => true, handler: new NetworkOnly() }],
 })
 
+// ---------------------------------------------------------------------------
+// NavigationRoute — sole handler for all page navigations.
+//
+// Uses precacheStrategy (CacheFirst) so the app shell is served instantly from
+// the precache with zero network round-trip, preventing the "site can't be
+// reached" flash that NetworkFirst causes when offline.
+//
+// On precache miss + network failure the custom handler delegates to the shared
+// two-tier offlineFallbackResponse from packages/platform/serwist.
+// ---------------------------------------------------------------------------
+
 if (isProd) {
-  const navigationRoute = new NavigationRoute(serwist.precacheStrategy, {
-    allowlist: [/^(?!\/__).*/],
-    denylist: [/^\/_serverFn/],
-  })
+  const precacheStrategy = serwist.precacheStrategy as CacheFirst
+
+  const navigationRoute = new NavigationRoute(
+    {
+      handle: async options => {
+        try {
+          return await precacheStrategy.handle(options)
+        } catch {
+          return offlineFallbackResponse(precacheStrategy)
+        }
+      },
+    },
+    {
+      allowlist: [/^(?!\/__).*/],
+      denylist: [/^\/_serverFn/],
+    },
+  )
+
   serwist.registerCapture(navigationRoute)
 }
 
 serwist.addEventListeners()
 
 // ---------------------------------------------------------------------------
-// Background full-app precache — runs once per deployment, never blocks the
-// SW lifecycle or the initial page load.
-//
-// Invariant: the completion marker is written IF AND ONLY IF every entry in
-// the lazy manifest is verified present in the cache afterward. A partial
-// run (network hiccup, going offline mid-run) leaves no marker, so the next
-// trigger (client message, 'online' event) retries — fetching only what's
-// still missing, since already-cached entries are skipped.
+// Shared background precache + lifecycle hooks (from platform package)
 // ---------------------------------------------------------------------------
-async function backgroundPrecacheRest(): Promise<void> {
-  if (!isProd) return
-  if (precacheInFlight) return
-  precacheInFlight = true
 
-  try {
-    const manifest = self.__SW_LAZY_MANIFEST ?? []
-    if (manifest.length === 0) return
+// Sweeps stale lazy-precache-* caches from prior deployments on activate.
+registerActivateCleanup(LAZY_CACHE_NAME)
 
-    const cache = await caches.open(LAZY_CACHE_NAME)
-
-    // Already fully completed for this build — instant no-op.
-    if (await cache.match(COMPLETE_MARKER_URL)) return
-
-    const urls = manifest.map(entry => (typeof entry === 'string' ? entry : entry.url))
-
-    for (let i = 0; i < urls.length; i += LAZY_BATCH_SIZE) {
-      if (typeof navigator !== 'undefined' && navigator.onLine === false) {
-        console.info('[SW] Lazy precache paused — offline. Will resume on next trigger.')
-        return // no marker written — next trigger retries remaining files
-      }
-
-      const batch = urls.slice(i, i + LAZY_BATCH_SIZE)
-
-      await Promise.all(
-        batch.map(async url => {
-          if (await cache.match(url)) return // already cached — idempotent
-
-          try {
-            const response = await fetch(url, { cache: 'no-cache' })
-            if (response.ok) await cache.put(url, response)
-            // non-ok response: leave uncached, verification pass below catches it
-          } catch {
-            // network error — leave uncached, verification pass below catches it
-          }
-        }),
-      )
-
-      await new Promise(resolve => setTimeout(resolve, LAZY_BATCH_DELAY_MS))
-    }
-
-    // Verification pass: only write the completion marker if EVERY manifest
-    // entry is actually present in the cache now. This is the fix for the
-    // bug where a partial failure could still result in a marker being
-    // written — that must never happen.
-    const missing: string[] = []
-    for (const url of urls) {
-      if (!(await cache.match(url))) missing.push(url)
-    }
-
-    if (missing.length > 0) {
-      console.info(`[SW] Lazy precache incomplete — ${missing.length} file(s) still missing. Will retry on next trigger.`)
-      return
-    }
-
-    await cache.put(COMPLETE_MARKER_URL, new Response('done'))
-    console.info('[SW] Lazy precache complete for build', BUILD_ID)
-  } finally {
-    precacheInFlight = false
-  }
-}
-
-// Activate stays fast: only sweeps stale per-build caches from prior
-// deployments. Lazy precaching is deliberately NOT started here — it's
-// triggered by the client (see useSw.ts) once the page has actually loaded,
-// so it can never be the thing standing between a deploy and a usable app.
-self.addEventListener('activate', event => {
-  event.waitUntil(
-    (async () => {
-      const keys = await caches.keys()
-      await Promise.all(keys.filter(key => key.startsWith('lazy-precache-') && key !== LAZY_CACHE_NAME).map(key => caches.delete(key)))
-    })(),
-  )
-})
-
-self.addEventListener('message', event => {
-  if (event.data === 'start-lazy-precache' || event.data === 'retry-lazy-precache') {
-    event.waitUntil(backgroundPrecacheRest())
-  }
-})
+// Responds to 'start-lazy-precache' / 'retry-lazy-precache' client messages.
+registerMessageListener(LAZY_CACHE_NAME, isProd)

@@ -1,3 +1,4 @@
+import { BRAND_WEBSITE_URL } from '@constants/lib/contact'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@platform/components/ui/collapsible'
 import {
   Sidebar,
@@ -60,6 +61,7 @@ interface Items {
   icon?: React.ReactNode
   isActive: boolean
   allowedRoles: Role[]
+  external?: boolean
   items: {
     title: string
     url: string
@@ -128,7 +130,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     [location.pathname],
   )
 
-  const { team, items } = React.useMemo(() => {
+  const { team, items } = React.useMemo((): { team: { name: string; logo: React.ReactNode; plan: string }; items: Items[] } => {
     if (!user?.business) return { team: { name: APP_NAME, logo: <BrandIcon />, plan: 'Guest' }, items: [] }
 
     // Check if this is a single-branch business (most important check - comes first!)
@@ -251,7 +253,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       }
 
       // Support items (Contact Us, FAQ) for single-branch - added separately at the bottom
-      const supportLinks = [
+      const supportLinks: Items[] = [
         {
           title: 'Contact Us',
           url: '/contact-us',
@@ -262,15 +264,16 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         },
         {
           title: 'FAQ',
-          url: '/faq',
+          url: `${BRAND_WEBSITE_URL}/pricing#faq`,
           icon: <LifeBuoyIcon />,
           items: [],
-          isActive: isRouteActive('/faq'),
+          isActive: false,
+          external: true,
           allowedRoles: [] as Role[],
         },
       ]
 
-      data.items = data.items.map(item => {
+      data.items = data.items.map((item): Items => {
         // Map sub-items and check if any are active
         const subItems = item.items?.map(subItem => ({
           ...subItem,
@@ -525,10 +528,17 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               ) : (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild isActive={item.isActive} tooltip={item.title}>
-                    <Link to={item.url as never} params={{} as never} search={prev => prev as never}>
-                      {item.icon}
-                      <span>{item.title}</span>
-                    </Link>
+                    {item.external ? (
+                      <a href={item.url} target='_blank' rel='noopener noreferrer'>
+                        {item.icon}
+                        <span>{item.title}</span>
+                      </a>
+                    ) : (
+                      <Link to={item.url as never} params={{} as never} search={prev => prev as never}>
+                        {item.icon}
+                        <span>{item.title}</span>
+                      </Link>
+                    )}
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ),

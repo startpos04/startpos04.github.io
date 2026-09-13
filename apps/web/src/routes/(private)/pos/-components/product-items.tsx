@@ -2,10 +2,12 @@ import { getColumns } from '@platform/components/custom/data-view'
 import { MultiView } from '@platform/components/custom/data-view/multi-view'
 import { Button } from '@platform/components/ui/button'
 import { Dialog, DialogContent } from '@platform/components/ui/dialog'
+import { branchCapabilityConfigCollection } from '@platform/db/collections'
 import { withForm } from '@platform/hooks/form'
 import { useCapability } from '@platform/hooks/use-capability'
 import { Capabilities } from '@platform/lib/entitlement/capability-keys'
 import MountManager, { type MountProps } from '@platform/lib/mount-manager'
+import { and, eq, useLiveQuery } from '@tanstack/react-db'
 import { useStore } from '@tanstack/react-form'
 import { useNavigate, useSearch } from '@tanstack/react-router'
 import type { ColumnDef } from '@tanstack/react-table'
@@ -13,6 +15,7 @@ import _ from 'lodash'
 import { PackagePlus, PackageSearch, Plus, ShoppingCart } from 'lucide-react'
 import { useMemo } from 'react'
 import { usePOS } from '@/hooks/use-pos'
+import { useAuthenticatedUser } from '@/lib/better-auth/auth-store'
 import { productCols } from '@/lib/columns/product-columns'
 import { tableCols } from '@/lib/columns/table-columns'
 import { PosStockEngine, type posItem, stockResultToNumber } from '@/lib/conversion/pos-stock-engine'
@@ -64,6 +67,18 @@ export const Products = withForm({
     const { posProducts, totalItemsPosProducts, orderItems, isLoading } = usePOS({ searchQuery: search, page, pageSize })
     const navigate = useNavigate({ from: '/pos/' })
     const hasInventory = useCapability(Capabilities.MANAGE_INVENTORY)
+    const user = useAuthenticatedUser()
+
+    // Gate QuickAdd on the QUICK_ADD_PRODUCT branch config (defaults to enabled if no row exists)
+    const quickAddConfig = useLiveQuery(
+      q =>
+        q
+          .from({ cfg: branchCapabilityConfigCollection })
+          .where(({ cfg }) => and(eq(cfg.branchId, user.branch.id), eq(cfg.capabilityId, 'QUICK_ADD_PRODUCT')))
+          .select(({ cfg }) => ({ enabled: cfg.enabled })),
+      [user.branch.id],
+    )
+    const canQuickAdd = quickAddConfig.data?.[0] ? quickAddConfig.data[0].enabled : true
 
     const columns = useMemo(
       () =>
@@ -134,17 +149,19 @@ export const Products = withForm({
             </p>
           </div>
           <div className='flex flex-col sm:flex-row gap-2 items-center'>
-            <Button
-              variant='default'
-              size='sm'
-              className='gap-2'
-              onClick={() => {
-                MountManager.show(QuickAddDialog, { searchQuery: '', onConfirm: handleAddToCart })
-              }}
-            >
-              <PackagePlus className='w-4 h-4' />
-              Quick Add an item
-            </Button>
+            {canQuickAdd && (
+              <Button
+                variant='default'
+                size='sm'
+                className='gap-2'
+                onClick={() => {
+                  MountManager.show(QuickAddDialog, { searchQuery: '', onConfirm: handleAddToCart })
+                }}
+              >
+                <PackagePlus className='w-4 h-4' />
+                Quick Add an item
+              </Button>
+            )}
             <Button variant='outline' size='sm' className='gap-2' onClick={() => navigate({ to: '/products/create' })}>
               <Plus className='w-4 h-4' />
               Set up catalog
@@ -167,16 +184,18 @@ export const Products = withForm({
               This product isn't in your catalog yet. Quick Add it to sell now — you can complete its details later.
             </p>
           </div>
-          <Button
-            size='sm'
-            className='gap-2'
-            onClick={() => {
-              MountManager.show(QuickAddDialog, { searchQuery: search, onConfirm: handleAddToCart })
-            }}
-          >
-            <PackagePlus className='w-4 h-4' />
-            Quick Add "{search}"
-          </Button>
+          {canQuickAdd && (
+            <Button
+              size='sm'
+              className='gap-2'
+              onClick={() => {
+                MountManager.show(QuickAddDialog, { searchQuery: search, onConfirm: handleAddToCart })
+              }}
+            >
+              <PackagePlus className='w-4 h-4' />
+              Quick Add "{search}"
+            </Button>
+          )}
         </div>
       )
     }
@@ -186,16 +205,18 @@ export const Products = withForm({
         data={posProducts}
         isFetching={isLoading}
         actions={
-          <Button
-            type='button'
-            size='sm'
-            variant='outline'
-            className='gap-1.5 border-dashed'
-            onClick={() => MountManager.show(QuickAddDialog, { searchQuery: '', onConfirm: handleAddToCart })}
-          >
-            <PackagePlus className='w-4 h-4' />
-            Quick Add
-          </Button>
+          canQuickAdd ? (
+            <Button
+              type='button'
+              size='sm'
+              variant='outline'
+              className='gap-1.5 border-dashed'
+              onClick={() => MountManager.show(QuickAddDialog, { searchQuery: '', onConfirm: handleAddToCart })}
+            >
+              <PackagePlus className='w-4 h-4' />
+              Quick Add
+            </Button>
+          ) : undefined
         }
         paginable={{
           pageSize,

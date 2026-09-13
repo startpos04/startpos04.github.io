@@ -3,16 +3,22 @@
  *
  * Side drawer that shows detailed entitlement information for a capability,
  * including usage limits, current usage, override status, and branch toggle.
+ *
+ * For branch-level capabilities the footer exposes a live on/off toggle that
+ * calls toggleBranchCapability — replacing the old read-only footer message.
  */
 
 import { Badge } from '@platform/components/ui/badge'
 import { Button } from '@platform/components/ui/button'
+import { Label } from '@platform/components/ui/label'
 import { Progress } from '@platform/components/ui/progress'
+import { Switch } from '@platform/components/ui/switch'
 import { cn } from '@platform/lib/utils'
-import { useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { AlertCircle, CheckCircle2, Info, Settings, TrendingUp, X } from 'lucide-react'
 import { toast } from 'sonner'
 import type { EntitlementDetail } from '@/lib/server-fn/fetch-entitlement-details'
+import { toggleBranchCapability } from '@/lib/server-fn/toggle-branch-capability'
 import { closeCapabilitySidebar } from './capability-sidebar'
 
 interface CapabilityDetailsSidebarProps {
@@ -34,7 +40,7 @@ const CATEGORY_LABELS: Record<string, string> = {
 }
 
 export function CapabilityDetailsSidebar({ capability, onClose }: CapabilityDetailsSidebarProps) {
-  const queryClient = useQueryClient()
+  const qc = useQueryClient()
   const handleClose = onClose ?? closeCapabilitySidebar
 
   const usagePct =
@@ -44,7 +50,27 @@ export function CapabilityDetailsSidebar({ capability, onClose }: CapabilityDeta
     ? { label: 'Disabled', variant: 'destructive' as const, className: '' }
     : capability.isEnabledAtBranch
       ? { label: 'Active', variant: 'default' as const, className: 'bg-green-600 hover:bg-green-600 text-white' }
-      : { label: 'Paused', variant: 'outline' as const, className: 'text-muted-foreground' }
+      : { label: 'Paused at branch', variant: 'outline' as const, className: 'text-muted-foreground' }
+
+  // ── Branch toggle mutation ──────────────────────────────────────────────
+  const toggleMutation = useMutation({
+    mutationFn: (enabled: boolean) =>
+      toggleBranchCapability({
+        data: { capabilityKey: capability.capabilityKey as never, enabled },
+      }),
+    onSuccess: (result, enabled) => {
+      if (result.success) {
+        qc.invalidateQueries({ queryKey: ['entitlement-details'] })
+        qc.invalidateQueries({ queryKey: ['pos-settings'] })
+        toast.success(enabled ? `${capability.featureLabel} enabled for this branch` : `${capability.featureLabel} disabled for this branch`)
+        // Close and reopen will refresh via query — just close for now
+        handleClose()
+      } else {
+        toast.error(result.message ?? 'Failed to update capability')
+      }
+    },
+    onError: () => toast.error('Failed to update capability'),
+  })
 
   return (
     <div className='flex flex-col h-full'>
@@ -92,6 +118,31 @@ export function CapabilityDetailsSidebar({ capability, onClose }: CapabilityDeta
           </div>
 
           <div className='px-4 py-4 space-y-6'>
+            {/* Branch toggle — only for branch-level, enabled capabilities */}
+            {capability.isBranchLevel && capability.isEnabled && (
+              <div className='space-y-2'>
+                <h3 className='text-sm font-semibold flex items-center gap-2'>
+                  <Settings className='h-4 w-4 text-muted-foreground' />
+                  Branch Control
+                </h3>
+                <div className='flex items-center justify-between gap-4 p-3 rounded-lg border bg-card'>
+                  <div className='flex-1 min-w-0'>
+                    <Label className='text-sm font-medium leading-none cursor-pointer'>Enable for this branch</Label>
+                    <p className='text-xs text-muted-foreground mt-1'>
+                      {capability.isEnabledAtBranch ? 'This capability is currently active at this branch.' : 'This capability is disabled at this branch.'}
+                    </p>
+                  </div>
+                  <Switch
+                    size='sm'
+                    checked={capability.isEnabledAtBranch}
+                    disabled={toggleMutation.isPending}
+                    onCheckedChange={enabled => toggleMutation.mutate(enabled)}
+                    aria-label={`Toggle ${capability.featureLabel}`}
+                  />
+                </div>
+              </div>
+            )}
+
             {/* Usage */}
             <div className='space-y-2'>
               <h3 className='text-sm font-semibold flex items-center gap-2'>
@@ -159,13 +210,22 @@ export function CapabilityDetailsSidebar({ capability, onClose }: CapabilityDeta
 
       {/* Footer */}
       <div className='p-4 border-t bg-background shrink-0'>
-        <p className='text-xs text-muted-foreground text-center'>
-          To change limits or enable/disable capabilities, contact your administrator or{' '}
-          <a href='/business/subscription' className='text-primary underline-offset-2 hover:underline'>
-            upgrade your plan
-          </a>
-          .
-        </p>
+        {capability.isBranchLevel ? (
+          <p className='text-xs text-muted-foreground text-center'>
+            Branch-level settings only affect this branch.{' '}
+            <a href='/business/capabilities' className='text-primary underline-offset-2 hover:underline'>
+              Manage business-wide capabilities
+            </a>
+          </p>
+        ) : (
+          <p className='text-xs text-muted-foreground text-center'>
+            This is a business-wide capability.{' '}
+            <a href='/business/subscription' className='text-primary underline-offset-2 hover:underline'>
+              Upgrade your plan
+            </a>{' '}
+            to change limits or unlock additional features.
+          </p>
+        )}
       </div>
     </div>
   )

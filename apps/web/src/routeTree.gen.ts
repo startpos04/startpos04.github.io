@@ -1,4 +1,4 @@
-﻿/* eslint-disable */
+/* eslint-disable */
 
 // @ts-nocheck
 
@@ -752,8 +752,6 @@ export interface FileRoutesById {
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    | '/privacy'
-    | '/terms'
     | '/unauthorized'
     | '/forgot-password'
     | '/login'
@@ -829,8 +827,6 @@ export interface FileRouteTypes {
     | '/business/subscription/quotes/$quoteId/'
   fileRoutesByTo: FileRoutesByTo
   to:
-    | '/privacy'
-    | '/terms'
     | '/unauthorized'
     | '/forgot-password'
     | '/login'
@@ -902,8 +898,6 @@ export interface FileRouteTypes {
     | '/(private)'
     | '/(public)'
     | '/(private)/(dashboard)'
-    | '/(hybrid)/privacy'
-    | '/(hybrid)/terms'
     | '/(hybrid)/unauthorized'
     | '/(public)/forgot-password'
     | '/(public)/login'

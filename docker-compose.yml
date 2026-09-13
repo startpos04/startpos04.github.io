@@ -53,6 +53,8 @@ services:
     environment:
       POSTGRES_HOST: db
       DOCKER_DEV: "true"
+      PORT: ${PORT:-3000}
+      PUBLIC_PORT: ${PUBLIC_PORT:-3200}
     shm_size: '1gb'
     volumes:
       - web_output:/app/apps/web/.output
@@ -95,6 +97,8 @@ services:
     environment:
       POSTGRES_HOST: db
       DOCKER_DEV: "true"
+      PORT: ${ADMIN_PORT:-3001}
+      PUBLIC_PORT: ${ADMIN_PUBLIC_PORT:-3201}
     volumes:
       - admin_output:/app/apps/admin/.output
       - ./apps/admin/.env:/app/apps/admin/.env:ro

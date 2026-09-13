@@ -34,6 +34,8 @@ import { fetchStructuredId } from './fetch-structured-id'
 export type TransactionSnapshot = {
   id: string
   invoiceNo: string
+  /** Original sale timestamp — used by the refund window policy check */
+  createdAt: Date | string
   totalAmount: number
   totalCost: number
   taxAmount: number
@@ -89,6 +91,51 @@ export const createPosRefund = async (snapshot: TransactionSnapshot) => {
   // The refund itself always completes; only the stock adjustment is skipped
   // when the user is on a plan that does not include inventory management.
   const canManageInventory = user?.entitlement?.capabilities?.includes(Capabilities.MANAGE_INVENTORY) ?? false
+
+  // ---------------------------------------------------------------------------
+  // REFUND POLICY ENFORCEMENT
+  // Both checks run before sequence allocation so no sequence is consumed on
+  // a policy rejection.
+  // ---------------------------------------------------------------------------
+
+  // 1. Refund window check
+  //    REFUND_WINDOW_HOURS: -1 = unlimited, 0 = disabled, positive = hours allowed
+  const refundWindowHours: number = ((user.configs as Record<string, unknown>)['REFUND_WINDOW_HOURS'] as number) ?? -1
+
+  if (refundWindowHours === 0) {
+    return {
+      error: new Error('Refunds are disabled for this business. Contact your administrator to enable refunds.'),
+    }
+  }
+
+  if (refundWindowHours > 0) {
+    const saleTime = new Date(snapshot.createdAt).getTime()
+    const nowTime = Date.now()
+    const elapsedHours = (nowTime - saleTime) / (1000 * 60 * 60)
+
+    if (elapsedHours > refundWindowHours) {
+      const windowLabel =
+        refundWindowHours < 24
+          ? `${refundWindowHours} hour${refundWindowHours === 1 ? '' : 's'}`
+          : `${Math.round(refundWindowHours / 24)} day${Math.round(refundWindowHours / 24) === 1 ? '' : 's'}`
+      return {
+        error: new Error(`Refund window has expired. This business only allows refunds within ${windowLabel} of the original sale.`),
+      }
+    }
+  }
+
+  // 2. Supervisor requirement check
+  //    REFUND_REQUIRES_SUPERVISOR: only SUPERVISOR or ADMIN role may proceed
+  const requiresSupervisor: boolean = ((user.configs as Record<string, unknown>)['REFUND_REQUIRES_SUPERVISOR'] as boolean) ?? false
+
+  if (requiresSupervisor) {
+    const role = user.role as string
+    if (role !== 'SUPERVISOR' && role !== 'ADMIN' && role !== 'OWNER') {
+      return {
+        error: new Error('This business requires a Supervisor or Admin to issue refunds. Please ask a supervisor to process this refund.'),
+      }
+    }
+  }
 
   // ---------------------------------------------------------------------------
   // PHASE 1 FIX: Allocate refund sequence SERVER-SIDE before transaction

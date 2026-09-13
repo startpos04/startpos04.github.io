@@ -1,12 +1,12 @@
 import { resolve } from 'node:path'
 import tailwindcss from '@tailwindcss/vite'
-import { devtools } from '@tanstack/devtools-vite'
 import { tanstackStart } from '@tanstack/react-start/plugin/vite'
 import viteReact from '@vitejs/plugin-react'
 import { nitro } from 'nitro/vite'
 import type { Plugin } from 'vite'
 import { defineConfig } from 'vite'
 import viteTsConfigPaths from 'vite-tsconfig-paths'
+import { tanstackDevtoolsPlugin } from '../../packages/platform/vite-devtools'
 import { tanstackSerwistPlugin } from './vite-plugin'
 
 const port = Number(process.env['PORT'] ?? 3000)
@@ -117,6 +117,27 @@ const serverConfig = {
 
 const config = defineConfig({
   resolve: {
+    // Force all React-ecosystem packages to resolve from a single location.
+    // Without this, packages/platform (resolved via @platform/ alias) uses its own
+    // node_modules/react junction while apps/web uses its own — Vite 7 / Rolldown
+    // can assign different module IDs to these two junction paths even though they
+    // both point to the same .pnpm singleton, producing two React instances in the
+    // browser bundle and "Invalid hook call" errors at runtime.
+    dedupe: [
+      'react',
+      'react-dom',
+      'react/jsx-runtime',
+      'react/jsx-dev-runtime',
+      'next-themes',
+      '@tanstack/react-router',
+      '@tanstack/react-store',
+      '@tanstack/react-query',
+      '@tanstack/react-db',
+      '@tanstack/react-devtools',
+      '@tanstack/react-query-devtools',
+      '@tanstack/react-router-devtools',
+      '@tanstack/react-form-devtools',
+    ],
     alias: [
       {
         find: /^@platform\/(.*)/,
@@ -166,7 +187,7 @@ const config = defineConfig({
         },
       },
     }),
-    ...(dockerDev ? [] : [devtools()]),
+    ...tanstackDevtoolsPlugin(dockerDev ? { publicPort } : {}),
     tailwindcss(),
     viteReact(),
     tanstackSerwistPlugin(),
@@ -178,7 +199,32 @@ const config = defineConfig({
     strictPort: true,
     headers: securityHeaders,
   },
+  ssr: {
+    // next-themes uses React.useContext internally. When Vite SSR externalizes it
+    // (the default for node_modules packages), it gets require()'d at runtime with
+    // a React module that hasn't fully initialized its hooks — causing
+    // "exports.useContext is null" errors. Bundling it into the SSR build ensures
+    // it shares the same React instance as the rest of the app.
+    noExternal: ['next-themes'],
+  },
   optimizeDeps: {
+    // Explicitly pre-bundle React so the optimizer always produces a single
+    // shared chunk — prevents Vite from creating separate React instances when
+    // platform source files (resolved via @platform/ alias) import 'react'
+    // from a different junction path than the app itself.
+    include: [
+      'react',
+      'react-dom',
+      'react/jsx-runtime',
+      'react/jsx-dev-runtime',
+      '@tanstack/react-router',
+      '@tanstack/react-store',
+      '@tanstack/react-query',
+      '@tanstack/react-devtools',
+      '@tanstack/react-query-devtools',
+      '@tanstack/react-router-devtools',
+      '@tanstack/react-form-devtools',
+    ],
     exclude: ['@tanstack/browser-db-sqlite-persistence'],
   },
   build: {

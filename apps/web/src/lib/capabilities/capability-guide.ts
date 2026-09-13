@@ -334,6 +334,69 @@ export const CAPABILITY_GUIDES: Record<string, CapabilityGuide> = {
 }
 
 /**
+ * Maps each capability ID to the anchor section on the public features page.
+ * Used by the "Learn More" button in the capability details sidebar.
+ *
+ * Anchors correspond to `id` attributes on <section> elements in
+ * apps/website/src/pages/features.astro.
+ */
+export const CAPABILITY_FEATURE_ANCHORS: Record<string, string> = {
+  // POS
+  COMPLETE_CHECKOUT: 'pos',
+  RECORD_PAYMENT: 'pos',
+  ISSUE_REFUND: 'pos',
+  // Orders
+  CREATE_ORDER: 'orders',
+  VIEW_ORDER_HISTORY: 'orders',
+  // Products
+  MANAGE_PRODUCTS: 'catalogue',
+  // Receipts & compliance
+  PRINT_RECEIPT: 'receipts',
+  // Cash reconciliation
+  START_VENDOR_SESSION: 'cash',
+  // Inventory
+  MANAGE_INVENTORY: 'inventory',
+  VIEW_INVENTORY_REPORTS: 'inventory',
+  // Batch preparation
+  BATCH_PREPARATION: 'batch',
+  // Purchasing
+  CREATE_PURCHASE: 'purchasing',
+  MANAGE_SUPPLIERS: 'purchasing',
+  // Tasks
+  CREATE_TASK: 'tasks',
+  // Customers
+  MANAGE_CUSTOMERS: 'customers',
+  // Reports
+  VIEW_SALES_REPORTS: 'reports',
+  VIEW_TRANSACTION_HISTORY: 'reports',
+  VIEW_ANALYTICS: 'reports',
+  EXPORT_DATA: 'reports',
+  // Multi-branch
+  MANAGE_BRANCHES: 'branches',
+  // Employees
+  MANAGE_EMPLOYEES: 'employees',
+  // Coming soon
+  LOYALTY_POINTS: 'loyalty',
+  KITCHEN_DISPLAY: 'kds',
+  DELIVERY_MANAGEMENT: 'delivery',
+  // Platform — link to top of features page (no dedicated section)
+  MANAGE_SETTINGS: '',
+  MANAGE_BILLING: '',
+  REACTIVATE_SUBSCRIPTION: '',
+  ACCESS_API: '',
+}
+
+/**
+ * Returns the full URL to the public features page section for a capability.
+ * Falls back to the features page root if the capability has no dedicated anchor.
+ */
+export function getCapabilityFeaturesUrl(capabilityId: string, websiteBaseUrl: string): string {
+  const anchor = CAPABILITY_FEATURE_ANCHORS[capabilityId]
+  const base = `${websiteBaseUrl}/features`
+  return anchor ? `${base}#${anchor}` : base
+}
+
+/**
  * Get benefits list for a capability.
  * Returns empty array if capability not found.
  */

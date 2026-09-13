@@ -63,9 +63,21 @@ interface RefundDialogProps extends MountProps {
   onConfirm: () => void
   isPending: boolean
   canManageInventory: boolean
+  refundPolicy: { windowHours: number; requiresSupervisor: boolean }
 }
 
-function RefundDialog({ open, onClose, transaction, onConfirm, isPending, canManageInventory }: RefundDialogProps) {
+function RefundDialog({ open, onClose, transaction, onConfirm, isPending, canManageInventory, refundPolicy }: RefundDialogProps) {
+  const windowLabel =
+    refundPolicy.windowHours === -1
+      ? 'Unlimited'
+      : refundPolicy.windowHours === 0
+        ? 'Disabled'
+        : refundPolicy.windowHours < 24
+          ? `${refundPolicy.windowHours}h window`
+          : `${Math.round(refundPolicy.windowHours / 24)}d window`
+
+  const showPolicyBanner = refundPolicy.windowHours !== -1 || refundPolicy.requiresSupervisor
+
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className='max-w-sm'>
@@ -97,6 +109,18 @@ function RefundDialog({ open, onClose, transaction, onConfirm, isPending, canMan
             <span className='font-mono text-sm font-black text-destructive'>{PriceEngine.format(transaction.totalAmount)}</span>
           </div>
         </div>
+
+        {/* Refund policy banner — only shown when a non-default policy is active */}
+        {showPolicyBanner && (
+          <div className='flex items-start gap-2 rounded-lg bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 p-3'>
+            <AlertTriangle className='size-3.5 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5' />
+            <div className='text-xs text-blue-800 dark:text-blue-300 space-y-0.5'>
+              <p className='font-semibold'>Refund Policy</p>
+              {refundPolicy.windowHours !== -1 && <p>Window: {windowLabel} from original sale</p>}
+              {refundPolicy.requiresSupervisor && <p>Supervisor or Admin role required</p>}
+            </div>
+          </div>
+        )}
 
         {/* Warning — inventory restock only shown if user has MANAGE_INVENTORY */}
         <div className='flex items-start gap-2 rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 p-3'>
@@ -188,6 +212,35 @@ function RouteComponent({ transaction: propTransaction, onClose }: RouteComponen
   const canRefund = user.entitlement.capabilities.includes(Capabilities.ISSUE_REFUND) ?? false
   const canManageInventory = user.entitlement.capabilities.includes(Capabilities.MANAGE_INVENTORY) ?? false
 
+  // Refund policy — derived from user.configs (populated at login from Configuration table)
+  const refundWindowHours: number = ((user.configs as Record<string, unknown>)['REFUND_WINDOW_HOURS'] as number) ?? -1
+  const requiresSupervisor: boolean = ((user.configs as Record<string, unknown>)['REFUND_REQUIRES_SUPERVISOR'] as boolean) ?? false
+  const refundPolicy = { windowHours: refundWindowHours, requiresSupervisor }
+
+  // Pre-compute whether refund is blocked by policy so the button/dialog can
+  // give precise feedback before the mutation is even attempted.
+  const refundBlocked: { reason: string } | null = (() => {
+    if (!transaction) return null
+    if (refundWindowHours === 0) return { reason: 'Refunds are disabled by your business policy.' }
+    if (refundWindowHours > 0) {
+      const elapsedHours = (Date.now() - new Date(transaction.createdAt).getTime()) / (1000 * 60 * 60)
+      if (elapsedHours > refundWindowHours) {
+        const label =
+          refundWindowHours < 24
+            ? `${refundWindowHours} hour${refundWindowHours === 1 ? '' : 's'}`
+            : `${Math.round(refundWindowHours / 24)} day${Math.round(refundWindowHours / 24) === 1 ? '' : 's'}`
+        return { reason: `Refund window expired — only within ${label} of sale.` }
+      }
+    }
+    if (requiresSupervisor) {
+      const role = user.role as string
+      if (role !== 'SUPERVISOR' && role !== 'ADMIN' && role !== 'OWNER') {
+        return { reason: 'A Supervisor or Admin is required to issue refunds.' }
+      }
+    }
+    return null
+  })()
+
   const queryClient = useQueryClient()
 
   const refundMutation = useMutation({
@@ -198,6 +251,7 @@ function RouteComponent({ transaction: propTransaction, onClose }: RouteComponen
       const snap = {
         id: transaction?.id,
         invoiceNo: transaction?.invoiceNo,
+        createdAt: transaction?.createdAt,
         totalAmount: transaction?.totalAmount,
         totalCost: transaction?.totalCost,
         taxAmount: transaction?.taxAmount,
@@ -258,11 +312,20 @@ function RouteComponent({ transaction: propTransaction, onClose }: RouteComponen
 
   const handleRefund = () => {
     if (!transaction) return
+    if (refundBlocked) {
+      MountManager.show(AlertPrompt, {
+        title: 'Refund Not Allowed',
+        description: refundBlocked.reason,
+        btnText: 'OK',
+      })
+      return
+    }
     MountManager.show(RefundDialog, {
       transaction,
       onConfirm: () => refundMutation.mutate(),
       isPending: refundMutation.isPending,
       canManageInventory,
+      refundPolicy,
     })
   }
 
@@ -395,15 +458,16 @@ function RouteComponent({ transaction: propTransaction, onClose }: RouteComponen
       <div className='p-4 border-t shrink-0 flex flex-col gap-2'>
         {showRefundButton && (
           <Button
-            variant='destructive'
+            variant={refundBlocked ? 'outline' : 'destructive'}
             className='w-full h-9 gap-2 rounded-xl'
             onClick={handleRefund}
             disabled={alreadyRefunded || refundMutation.isPending || !isOnline}
           >
             <RotateCcw className='size-3.5' />
-            {alreadyRefunded ? 'Already Refunded' : isOnline ? 'Issue Refund' : 'Refund (Offline)'}
+            {alreadyRefunded ? 'Already Refunded' : refundBlocked ? 'Refund Blocked' : isOnline ? 'Issue Refund' : 'Refund (Offline)'}
           </Button>
         )}
+        {showRefundButton && refundBlocked && <p className='text-[10px] text-muted-foreground text-center'>{refundBlocked.reason}</p>}
         <Button variant='outline' className='w-full h-9 gap-2 rounded-xl' onClick={handleExport} disabled={!isOnline}>
           <Download className='size-3.5' /> Export This Transaction
         </Button>

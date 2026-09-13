@@ -5,6 +5,7 @@ import { useIsOnline } from '@platform/hooks/use-is-online'
 import MountManager from '@platform/lib/mount-manager'
 import { useLiveQuery } from '@tanstack/react-db'
 import { createFileRoute, Outlet, useNavigate } from '@tanstack/react-router'
+import { useStore } from '@tanstack/react-store'
 import { useEffect } from 'react'
 import { syncServerToLocal } from '@/lib/better-auth/auth-engine'
 import { authStore } from '@/lib/better-auth/auth-store'
@@ -21,7 +22,17 @@ export const Route = createFileRoute('/(private)')({
 
 function RouteComponent() {
   const isOnline = useIsOnline()
-  const { user } = Route.useRouteContext()
+
+  // user from beforeLoad — populated when online (getAuthUser succeeds).
+  // When offline, getAuthUser() throws and beforeLoad returns { user: undefined }.
+  const { user: serverUser } = Route.useRouteContext()
+
+  // Offline fallback: read the user that was already stored in authStore
+  // from a previous successful online login. This prevents the guard below
+  // from redirecting to /login on every page reload while offline.
+  const storeUser = useStore(authStore, s => s.user)
+  const user = serverUser ?? storeUser ?? null
+
   const navigate = useNavigate({ from: '/' })
   const localAuths = useLiveQuery(q => q.from({ localAuth: localAuthCollection }).select(({ localAuth }) => localAuth))
 
@@ -36,15 +47,15 @@ function RouteComponent() {
     }
 
     // Session exists but no Membership yet → OAuth user needs business setup
-    if (isOnline && user && !user.business?.id) {
+    if (isOnline && serverUser && !serverUser.business?.id) {
       navigate({ to: '/register/business-setup' })
       return
     }
 
     const exists = localAuths.data.find(u => u.id === localUser.id)
 
-    if (exists && isOnline && user) {
-      syncServerToLocal(user)
+    if (exists && isOnline && serverUser) {
+      syncServerToLocal(serverUser)
     }
 
     MountManager.clear()

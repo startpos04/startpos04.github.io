@@ -56,6 +56,9 @@ enum ConfigurationKey {
   LOCALE
   CURRENCY
   AUTO_APPROVE_LOW_STOCK_REFILL // Default: "true" — auto-approve SHELF_REFILL tasks on low-stock detection (P-TASK-04 exception)
+  // --- REFUND POLICY ---
+  REFUND_WINDOW_HOURS // Default: "-1" — how long after a sale a refund is allowed. -1 = unlimited, 0 = disabled, positive = hours
+  REFUND_REQUIRES_SUPERVISOR // Default: "false" — whether a supervisor must approve refunds
   // --- ENTITLEMENT / BILLING POLICY ---
   // All values stored as strings; parse at read time.
   TRIAL_DURATION_DAYS // Default: "30"
